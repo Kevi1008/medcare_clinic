@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MedCare Clinic - Premier Healthcare Services</title>
+    <link rel="stylesheet" href="/home/style.css" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- <link rel="stylesheet" href="/server.js"> -->
+    
+</head>
+<body>
+    <!-- Loading Spinner -->
+    <div class="loading" id="loading">
+        <div class="spinner"></div>
+    </div>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="nav-container">
+            <div class="logo">
+                <i class="fas fa-heartbeat"></i>
+                MedCare Clinic
+            </div>
+            <nav>
+                <ul class="nav-menu">
+                    <li><a href="#home">Home</a></li>
+                    <li><a href="#services">Services</a></li>
+                    <li><a href="#about">About</a></li>
+                    <li><a href="#contact">Contact</a></li>
+                </ul>
+            </nav>
+            <div class="auth-buttons">
+                <a href="/login" class="btn btn-secondary">
+                    <i class="fas fa-sign-in-alt"></i> Login
+                </a>
+                <a href="/register" class="btn btn-primary">
+                    <i class="fas fa-user-plus"></i> Register
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero" id="home">
+        <div class="hero-content">
+            <div class="hero-text fade-in">
+                <h1>Your Health, Our Priority</h1>
+                <p>Experience world-class healthcare with our team of experienced doctors and state-of-the-art facilities. We're committed to providing you with personalized, compassionate care.</p>
+                <div class="hero-buttons">
+                    <a href="register.html" class="btn btn-primary">
+                        <i class="fas fa-calendar-plus"></i> Book Appointment
+                    </a>
+                    <a href="#services" class="btn btn-secondary">
+                        <i class="fas fa-info-circle"></i> Learn More
+                    </a>
+                </div>
+            </div>
+            <div class="hero-image fade-in">
+                <div class="hero-card">
+                    <i class="fas fa-stethoscope"></i>
+                    <h3>24/7 Healthcare</h3>
+                    <p>Round-the-clock medical assistance</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Services Section -->
+    <section class="services" id="services">
+        <div class="container">
+            <div class="section-header fade-in">
+                <h2>Our Services</h2>
+                <p>Comprehensive healthcare services designed to meet all your medical needs</p>
+            </div>
+            <div class="services-grid">
+                <div class="service-card fade-in">
+                    <i class="fas fa-user-md"></i>
+                    <h3>General Medicine</h3>
+                    <p>Comprehensive primary healthcare services with experienced physicians for all your general medical needs.</p>
+                </div>
+                <div class="service-card fade-in">
+                    <i class="fas fa-heart"></i>
+                    <h3>Cardiology</h3>
+                    <p>Advanced cardiac care with cutting-edge diagnostic tools and treatment options for heart conditions.</p>
+                </div>
+                <div class="service-card fade-in">
+                    <i class="fas fa-brain"></i>
+                    <h3>Neurology</h3>
+                    <p>Specialized neurological care for brain and nervous system disorders with expert neurologists.</p>
+                </div>
+                <div class="service-card fade-in">
+                    <i class="fas fa-bone"></i>
+                    <h3>Orthopedics</h3>
+                    <p>Complete orthopedic care for bone, joint, and muscle conditions with modern surgical techniques.</p>
+                </div>
+                <div class="service-card fade-in">
+                    <i class="fas fa-baby"></i>
+                    <h3>Pediatrics</h3>
+                    <p>Specialized healthcare services for infants, children, and adolescents with pediatric experts.</p>
+                </div>
+                <div class="service-card fade-in">
+                    <i class="fas fa-microscope"></i>
+                    <h3>Laboratory</h3>
+                    <p>State-of-the-art diagnostic laboratory with accurate and fast test results.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="stats">
+        <div class="container">
+            <div class="stats-grid">
+                <div class="stat-item fade-in">
+                    <h3 id="patientsCount">10000</h3>
+                    <p>Happy Patients</p>
+                </div>
+                <div class="stat-item fade-in">
+                    <h3 id="doctorsCount">50</h3>
+                    <p>Expert Doctors</p>
+                </div>
+                <div class="stat-item fade-in">
+                    <h3 id="yearsCount">15</h3>
+                    <p>Years of Service</p>
+                </div>
+                <div class="stat-item fade-in">
+                    <h3 id="awardsCount">25</h3>
+                    <p>Awards Won</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer" id="contact">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3>MedCare Clinic</h3>
+                <p>Providing exceptional healthcare services with compassion and expertise. Your health is our mission.</p>
+                <div style="margin-top: 1rem;">
+                    <i class="fab fa-facebook" style="margin-right: 1rem; font-size: 1.5rem; color: #64ffda; cursor: pointer;"></i>
+                    <i class="fab fa-twitter" style="margin-right: 1rem; font-size: 1.5rem; color: #64ffda; cursor: pointer;"></i>
+                    <i class="fab fa-linkedin" style="margin-right: 1rem; font-size: 1.5rem; color: #64ffda; cursor: pointer;"></i>
+                    <i class="fab fa-instagram" style="font-size: 1.5rem; color: #64ffda; cursor: pointer;"></i>
+                </div>
+            </div>
+            <div class="footer-section">
+                <h3>Quick Links</h3>
+                <ul>
+                    <li><a href="#home">Home</a></li>
+                    <li><a href="#services">Services</a></li>
+                    <li><a href="register.html">Book Appointment</a></li>
+                    <li><a href="login.html">Patient Portal</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h3>Services</h3>
+                <ul>
+                    <li><a href="#services">General Medicine</a></li>
+                    <li><a href="#services">Cardiology</a></li>
+                    <li><a href="#services">Neurology</a></li>
+                    <li><a href="#services">Orthopedics</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h3>Contact Info</h3>
+                <ul>
+                    <li><i class="fas fa-map-marker-alt"></i> 123 Medical Center Dr, City, State 12345</li>
+                    <li><i class="fas fa-phone"></i> +1 (555) 123-4567</li>
+                    <li><i class="fas fa-envelope"></i> info@medcareclinic.com</li>
+                    <li><i class="fas fa-clock"></i> 24/7 Emergency Services</li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2025 MedCare Clinic. All rights reserved. | Privacy Policy | Terms of Service</p>
+        </div>
+    </footer>
+
+    <!-- Emergency Contact Modal -->
+    <div id="emergencyModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2 style="color: #667eea; margin-bottom: 1rem;">Emergency Contact</h2>
+            <p>For medical emergencies, please call:</p>
+            <h3 style="color: #e74c3c; margin: 1rem 0;">911</h3>
+            <p>For non-emergency urgent care:</p>
+            <h3 style="color: #667eea; margin: 1rem 0;">+1 (555) 123-4567</h3>
+            <button class="btn btn-primary" onclick="closeModal()" style="width: 100%; margin-top: 1rem;">
+                Close
+            </button>
+        </div>
+    </div>
+
+    <script src="/home/script.js"></script>
+</body>
+</html>

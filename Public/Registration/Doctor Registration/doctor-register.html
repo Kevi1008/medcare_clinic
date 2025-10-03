@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doctor Registration - MedCare Clinic</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/Registration/Doctor Registration/doctor-register.css">
+    <!-- <link rel="stylesheet" href="/server.js"> -->
+</head>
+<body>
+    <a href="/" class="back-home"></a>
+        <i class="fas fa-arrow-left"></i>
+        Back to Home
+    </a>
+
+    <div class="register-container">
+        <div class="register-header">
+            <div class="register-header-content">
+                <div class="logo">
+                    <i class="fas fa-user-md"></i>
+                    MedCare Clinic - Doctor Registration
+                </div>
+                <h1>Join Our Medical Team</h1>
+                <p>Register as a healthcare professional to provide exceptional care to our patients</p>
+            </div>
+        </div>
+
+        <div class="register-form-container">
+            <div class="form-steps">
+                <div class="step active" data-step="1">
+                    <div class="step-number">1</div>
+                    <div class="step-title">Account Info</div>
+                    <div class="step-line"></div>
+                </div>
+                <div class="step" data-step="2">
+                    <div class="step-number">2</div>
+                    <div class="step-title">Personal Details</div>
+                    <div class="step-line"></div>
+                </div>
+                <div class="step" data-step="3">
+                    <div class="step-number">3</div>
+                    <div class="step-title">Professional Info</div>
+                    <div class="step-line"></div>
+                </div>
+                <div class="step" data-step="4">
+                    <div class="step-number">4</div>
+                    <div class="step-title">Confirmation</div>
+                </div>
+            </div>
+
+            <div class="alert alert-error" id="errorAlert">
+                <i class="fas fa-exclamation-circle"></i>
+                <span id="errorMessage"></span>
+            </div>
+
+            <div class="alert alert-success" id="successAlert">
+                <i class="fas fa-check-circle"></i>
+                <span id="successMessage"></span>
+            </div>
+
+            <form id="registerForm">
+                <!-- Step 1: Account Information -->
+                <div class="form-step active" data-step="1">
+                    <h3 style="margin-bottom: 2rem; color: #333; text-align: center;">Account Information</h3>
+                    
+                    <div class="form-row">
+                        <div class="form-group has-label">
+                            <label for="username" class="required">Username</label>
+                            <input type="text" id="username" name="username" required>
+                            <i class="fas fa-user"></i>
+                        </div>
+
+                        <div class="form-group has-label">
+                            <label for="email" class="required">Email Address</label>
+                            <input type="email" id="email" name="email" required>
+                            <i class="fas fa-envelope"></i>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group has-label">
+                            <label for="password" class="required">Password</label>
+                            <input type="password" id="password" name="password" required>
+                            <i class="fas fa-lock"></i>
+                            <div class="password-requirements">
+                                <div class="requirement invalid" id="lengthReq">
+                                    <i class="fas fa-times"></i>
+                                    <span>At least 6 characters</span>
+                                </div>
+                                <div class="requirement invalid" id="upperReq">
+                                    <i class="fas fa-times"></i>
+                                    <span>One uppercase letter</span>
+                                </div>
+                                <div class="requirement invalid" id="lowerReq">
+                                    <i class="fas fa-times"></i>
+                                    <span>One lowercase letter</span>
+                                </div>
+                                <div class="requirement invalid" id="numberReq">
+                                    <i class="fas fa-times"></i>
+                                    <span>One number</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group has-label">
+                            <label for="confirmPassword" class="required">Confirm Password</label>
+                            <input type="password" id="confirmPassword" name="confirmPassword" required>
+                            <i class="fas fa-lock"></i>
+                        </div>
+                    </div>
+
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-primary" onclick="nextStep()">
+                            Next <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Step 2: Personal Details -->
+                <div class="form-step" data-step="2">
+                    <h3 style="margin-bottom: 2rem; color: #333; text-align: center;">Personal Information</h3>
+                    
+                    <div class="form-row">
+                        <div class="form-group has-label">
+                            <label for="firstName" class="required">First Name</label>
+                            <input type="text" id="firstName" name="firstName" required>
+                            <i class="fas fa-user"></i>
+                        </div>
+
+                        <div class="form-group has-label">
+                            <label for="lastName" class="required">Last Name</label>
+                            <input type="text" id="lastName" name="lastName" required>
+                            <i class="fas fa-user"></i>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group has-label">
+                            <label for="phone" class="required">Phone Number</label>
+                            <input type="tel" id="phone" name="phone" required>
+                            <i class="fas fa-phone"></i>
+                        </div>
+
+                        <div class="form-group has-label">
+                            <label for="dateOfBirth">Date of Birth</label>
+                            <input type="date" id="dateOfBirth" name="dateOfBirth">
+                            <i class="fas fa-calendar"></i>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group has-label">
+                            <label for="gender" class="required">Gender</label>
+                            <select id="gender" name="gender" required>
+                                <option value="">Select Gender</option>
+                                <option value="male">Male</option>
+                                <option value="female">Female</option>
+                                <option value="other">Other</option>
+                            </select>
+                            <i class="fas fa-venus-mars"></i>
+                        </div>
+                    </div>
+
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-secondary" onclick="prevStep()">
+                            <i class="fas fa-arrow-left"></i> Previous
+                        </button>
+                        <button type="button" class="btn btn-primary" onclick="nextStep()">
+                            Next <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Step 3: Professional Information -->
+                <div class="form-step" data-step="3">
+                    <h3 style="margin-bottom: 2rem; color: #333; text-align: center;">Professional Information</h3>
+                    
+                    <div class="form-row">
+                        <div class="form-group has-label">
+                            <label for="specialization" class="required">Specialization</label>
+                            <input type="text" id="specialization" name="specialization" required>
+                            <i class="fas fa-stethoscope"></i>
+                        </div>
+
+                        <div class="form-group has-label">
+                            <label for="licenseNumber" class="required">License Number</label>
+                            <input type="text" id="licenseNumber" name="licenseNumber" required>
+                            <i class="fas fa-id-card"></i>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group has-label">
+                            <label for="qualification" class="required">Qualification</label>
+                            <input type="text" id="qualification" name="qualification" required>
+                            <i class="fas fa-graduation-cap"></i>
+                        </div>
+
+                        <div class="form-group has-label">
+                            <label for="experience" class="required">Experience (Years)</label>
+                            <input type="number" id="experience" name="experience" min="0" required>
+                            <i class="fas fa-briefcase"></i>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group has-label">
+                            <label for="department" class="required">Department</label>
+                            <select id="department" name="department" required>
+                                <option value="">Select Department</option>
+                                <option value="cardiology">Cardiology</option>
+                                <option value="neurology">Neurology</option>
+                                <option value="pediatrics">Pediatrics</option>
+                                <option value="orthopedics">Orthopedics</option>
+                                <option value="dermatology">Dermatology</option>
+                                <option value="psychiatry">Psychiatry</option>
+                                <option value="surgery">Surgery</option>
+                                <option value="internal-medicine">Internal Medicine</option>
+                                <option value="emergency">Emergency Medicine</option>
+                                <option value="radiology">Radiology</option>
+                            </select>
+                            <i class="fas fa-hospital"></i>
+                        </div>
+
+                        <div class="form-group has-label">
+                            <label for="consultationFee">Consultation Fee ($)</label>
+                            <input type="number" id="consultationFee" name="consultationFee" min="0" step="0.01">
+                            <i class="fas fa-dollar-sign"></i>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group full-width has-label">
+                            <label for="biography">Biography</label>
+                            <textarea id="biography" name="biography" placeholder="Tell us about your professional background and expertise..."></textarea>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group has-label">
+                            <label for="availableDays">Available Days</label>
+                            <div class="checkbox-group">
+                                <label><input type="checkbox" name="availableDays" value="Monday"> Monday</label>
+                                <label><input type="checkbox" name="availableDays" value="Tuesday"> Tuesday</label>
+                                <label><input type="checkbox" name="availableDays" value="Wednesday"> Wednesday</label>
+                                <label><input type="checkbox" name="availableDays" value="Thursday"> Thursday</label>
+                                <label><input type="checkbox" name="availableDays" value="Friday"> Friday</label>
+                                <label><input type="checkbox" name="availableDays" value="Saturday"> Saturday</label>
+                                <label><input type="checkbox" name="availableDays" value="Sunday"> Sunday</label>
+                            </div>
+                        </div>
+
+                        <div class="form-group has-label">
+                            <label for="availableTimeSlots">Available Time Slots</label>
+                            <input type="text" id="availableTimeSlots" name="availableTimeSlots" placeholder="e.g., 9:00 AM - 5:00 PM">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                    </div>
+
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-secondary" onclick="prevStep()">
+                            <i class="fas fa-arrow-left"></i> Previous
+                        </button>
+                        <button type="button" class="btn btn-primary" onclick="nextStep()">
+                            Next <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Step 4: Confirmation -->
+                <div class="form-step" data-step="4">
+                    <h3 style="margin-bottom: 2rem; color: #333; text-align: center;">Review & Confirm</h3>
+                    
+                    <div id="reviewInfo" style="background: #f8f9fa; padding: 2rem; border-radius: 10px; margin-bottom: 2rem;">
+                        <!-- Review information will be populated here -->
+                    </div>
+
+                    <div class="terms-agreement">
+                        <label>
+                            <input type="checkbox" id="agreeTerms" name="agreeTerms" required>
+                            I agree to the <a href="#" onclick="showTerms()">Terms of Service</a> and 
+                            <a href="#" onclick="showPrivacy()">Privacy Policy</a>
+                        </label>
+                    </div>
+
+                    <div class="terms-agreement">
+                        <label>
+                            <input type="checkbox" id="agreeProfessional" name="agreeProfessional" required>
+                            I certify that all provided information is accurate and I hold valid medical credentials
+                        </label>
+                    </div>
+
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-secondary" onclick="prevStep()">
+                            <i class="fas fa-arrow-left"></i> Previous
+                        </button>
+                        <button type="submit" class="btn btn-primary" id="registerBtn">
+                            <span id="registerText">Register as Doctor</span>
+                            <div class="loading-spinner" id="registerSpinner"></div>
+                            <i class="fas fa-user-md" id="registerIcon"></i>
+                        </button>
+                    </div>
+                </div>
+            </form>
+
+            <div style="text-align: center; margin-top: 2rem; padding-top: 2rem; border-top: 1px solid #e1e5e9;">
+                <p>Already have an account? <a href="/login" style="color: #667eea; text-decoration: none; font-weight: 500;">Sign In</a></p>
+            </div>
+        </div>
+    </div>
+
+<script src="/Registration/Doctor Registration/doctor-register.js"></script>
+</body>
+</html>

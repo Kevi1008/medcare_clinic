@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Registration - MedCare Clinic</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/Registration/Admin Register/admin-register.css">
+    <!-- <link rel="stylesheet" href="/server.js"> -->
+</head>
+<body>
+    <a href="/" class="back-home">
+        <i class="fas fa-arrow-left"></i>
+        Back to Home
+    </a>
+
+    <div class="register-container">
+        <div class="register-header">
+            <div class="register-header-content">
+                <div class="logo">
+                    <i class="fas fa-user-shield"></i>
+                    MedCare Clinic - Admin Registration
+                </div>
+                <h1>Join Our Administrative Team</h1>
+                <p>Register as an administrator to manage clinic operations and services</p>
+            </div>
+        </div>
+
+        <div class="register-form-container">
+            <div class="form-steps">
+                <div class="step active" data-step="1">
+                    <div class="step-number">1</div>
+                    <div class="step-title">Account Info</div>
+                    <div class="step-line"></div>
+                </div>
+                <div class="step" data-step="2">
+                    <div class="step-number">2</div>
+                    <div class="step-title">Personal Details</div>
+                    <div class="step-line"></div>
+                </div>
+                <div class="step" data-step="3">
+                    <div class="step-number">3</div>
+                    <div class="step-title">Admin Details</div>
+                    <div class="step-line"></div>
+                </div>
+                <div class="step" data-step="4">
+                    <div class="step-number">4</div>
+                    <div class="step-title">Confirmation</div>
+                </div>
+            </div>
+
+            <div class="alert alert-error" id="errorAlert">
+                <i class="fas fa-exclamation-circle"></i>
+                <span id="errorMessage"></span>
+            </div>
+
+            <div class="alert alert-success" id="successAlert">
+                <i class="fas fa-check-circle"></i>
+                <span id="successMessage"></span>
+            </div>
+
+            <form id="registerForm">
+                <!-- Step 1: Account Information -->
+                <div class="form-step active" data-step="1">
+                    <h3 style="margin-bottom: 2rem; color: #333; text-align: center;">Account Information</h3>
+                    
+                    <div class="form-row">
+                        <div class="form-group has-label">
+                            <label for="username" class="required">Username</label>
+                            <input type="text" id="username" name="username" required>
+                            <i class="fas fa-user"></i>
+                        </div>
+
+                        <div class="form-group has-label">
+                            <label for="email" class="required">Email Address</label>
+                            <input type="email" id="email" name="email" required>
+                            <i class="fas fa-envelope"></i>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group has-label">
+                            <label for="password" class="required">Password</label>
+                            <input type="password" id="password" name="password" required>
+                            <i class="fas fa-lock"></i>
+                            <div class="password-requirements">
+                                <div class="requirement invalid" id="lengthReq">
+                                    <i class="fas fa-times"></i>
+                                    <span>At least 6 characters</span>
+                                </div>
+                                <div class="requirement invalid" id="upperReq">
+                                    <i class="fas fa-times"></i>
+                                    <span>One uppercase letter</span>
+                                </div>
+                                <div class="requirement invalid" id="lowerReq">
+                                    <i class="fas fa-times"></i>
+                                    <span>One lowercase letter</span>
+                                </div>
+                                <div class="requirement invalid" id="numberReq">
+                                    <i class="fas fa-times"></i>
+                                    <span>One number</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group has-label">
+                            <label for="confirmPassword" class="required">Confirm Password</label>
+                            <input type="password" id="confirmPassword" name="confirmPassword" required>
+                            <i class="fas fa-lock"></i>
+                        </div>
+                    </div>
+
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-primary" onclick="nextStep()">
+                            Next <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Step 2: Personal Details -->
+                <div class="form-step" data-step="2">
+                    <h3 style="margin-bottom: 2rem; color: #333; text-align: center;">Personal Information</h3>
+                    
+                    <div class="form-row">
+                        <div class="form-group has-label">
+                            <label for="firstName" class="required">First Name</label>
+                            <input type="text" id="firstName" name="firstName" required>
+                            <i class="fas fa-user"></i>
+                        </div>
+
+                        <div class="form-group has-label">
+                            <label for="lastName" class="required">Last Name</label>
+                            <input type="text" id="lastName" name="lastName" required>
+                            <i class="fas fa-user"></i>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group has-label">
+                            <label for="phone" class="required">Phone Number</label>
+                            <input type="tel" id="phone" name="phone" required>
+                            <i class="fas fa-phone"></i>
+                        </div>
+                    </div>
+
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-secondary" onclick="prevStep()">
+                            <i class="fas fa-arrow-left"></i> Previous
+                        </button>
+                        <button type="button" class="btn btn-primary" onclick="nextStep()">
+                            Next <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Step 3: Admin Information -->
+                <div class="form-step" data-step="3">
+                    <h3 style="margin-bottom: 2rem; color: #333; text-align: center;">Administrative Information</h3>
+                    
+                    <div class="form-row">
+                        <div class="form-group has-label">
+                            <label for="employeeId" class="required">Employee ID</label>
+                            <input type="text" id="employeeId" name="employeeId" required>
+                            <i class="fas fa-id-badge"></i>
+                        </div>
+
+                        <div class="form-group has-label">
+                            <label for="department" class="required">Department</label>
+                            <select id="department" name="department" required>
+                                <option value="">Select Department</option>
+                                <option value="administration">Administration</option>
+                                <option value="hr">Human Resources</option>
+                                <option value="finance">Finance</option>
+                                <option value="operations">Operations</option>
+                                <option value="it">IT Support</option>
+                                <option value="facility">Facility Management</option>
+                            </select>
+                            <i class="fas fa-building"></i>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group has-label">
+                            <label for="position" class="required">Position</label>
+                            <input type="text" id="position" name="position" required>
+                            <i class="fas fa-briefcase"></i>
+                        </div>
+
+                        <div class="form-group has-label">
+                            <label for="accessLevel" class="required">Access Level</label>
+                            <select id="accessLevel" name="accessLevel" required>
+                                <option value="admin">Admin</option>
+                                <option value="manager">Manager</option>
+                                <option value="super_admin">Super Admin</option>
+                            </select>
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group full-width">
+                            <label>Permissions</label>
+                            <div class="checkbox-group permissions-grid">
+                                <label><input type="checkbox" name="permissions" value="manageUsers" checked> Manage Users</label>
+                                <label><input type="checkbox" name="permissions" value="manageDoctors" checked> Manage Doctors</label>
+                                <label><input type="checkbox" name="permissions" value="manageAppointments" checked> Manage Appointments</label>
+                                <label><input type="checkbox" name="permissions" value="viewReports" checked> View Reports</label>
+                                <label><input type="checkbox" name="permissions" value="manageSettings"> Manage Settings</label>
+                                <label><input type="checkbox" name="permissions" value="manageBilling"> Manage Billing</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-secondary" onclick="prevStep()">
+                            <i class="fas fa-arrow-left"></i> Previous
+                        </button>
+                        <button type="button" class="btn btn-primary" onclick="nextStep()">
+                            Next <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Step 4: Confirmation -->
+                <div class="form-step" data-step="4">
+                    <h3 style="margin-bottom: 2rem; color: #333; text-align: center;">Review & Confirm</h3>
+                    
+                    <div id="reviewInfo" style="background: #f8f9fa; padding: 2rem; border-radius: 10px; margin-bottom: 2rem;">
+                        <!-- Review information will be populated here -->
+                    </div>
+
+                    <div class="terms-agreement">
+                        <label>
+                            <input type="checkbox" id="agreeTerms" name="agreeTerms" required>
+                            I agree to the <a href="#" onclick="showTerms()">Terms of Service</a> and 
+                            <a href="#" onclick="showPrivacy()">Privacy Policy</a>
+                        </label>
+                    </div>
+
+                    <div class="terms-agreement">
+                        <label>
+                            <input type="checkbox" id="agreeConfidentiality" name="agreeConfidentiality" required>
+                            I understand and agree to maintain strict confidentiality of all patient and clinic data
+                        </label>
+                    </div>
+
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-secondary" onclick="prevStep()">
+                            <i class="fas fa-arrow-left"></i> Previous
+                        </button>
+                        <button type="submit" class="btn btn-primary" id="registerBtn">
+                            <span id="registerText">Register as Admin</span>
+                            <div class="loading-spinner" id="registerSpinner"></div>
+                            <i class="fas fa-user-shield" id="registerIcon"></i>
+                        </button>
+                    </div>
+                </div>
+            </form>
+
+            <div style="text-align: center; margin-top: 2rem; padding-top: 2rem; border-top: 1px solid #e1e5e9;">
+                <p>Already have an account? <a href="/login" style="color: #667eea; text-decoration: none; font-weight: 500;">Sign In</a></p>
+            </div>
+        </div>
+    </div>
+
+    <script src="/Registration/Admin Register/admin-register.js"></script>
+</body>
+</html>

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - MedCare Clinic</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/Registration/Registration.css">
+    <!-- <link rel="stylesheet" href="/server.js"> -->
+</head>
+<body>
+    <a href="/" class="back-home">
+        <i class="fas fa-arrow-left"></i>
+        Back to Home
+    </a>
+
+    <div class="login-container">
+        <div class="login-image-section">
+            <div class="login-image-content">
+                <div class="logo">
+                    <i class="fas fa-heartbeat"></i>
+                    MedCare
+                </div>
+                <h2>Join MedCare!</h2>
+                <p>Create your account and start managing your healthcare journey with ease.</p>
+            </div>
+        </div>
+
+        <div class="login-form-section">
+            <div class="form-animation">
+                <div class="form-header">
+                    <h1>Get Started</h1>
+                    <p>Select your role to create an account</p>
+                </div>
+
+                <div class="alert alert-error" id="errorAlert">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <span id="errorMessage"></span>
+                </div>
+
+                <div class="alert alert-success" id="successAlert">
+                    <i class="fas fa-check-circle"></i>
+                    <span id="successMessage"></span>
+                </div>
+
+                <div class="role-selector">
+                    <div class="role-option active" data-role="patient">
+                        <i class="fas fa-user"></i>
+                        <div>Patient</div>
+                    </div>
+                    <div class="role-option" data-role="doctor">
+                        <i class="fas fa-user-md"></i>
+                        <div>Doctor</div>
+                    </div>
+                    <div class="role-option" data-role="admin">
+                        <i class="fas fa-user-shield"></i>
+                        <div>Admin</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/Registration/Registration.js"></script>
+</body>
+</html>
