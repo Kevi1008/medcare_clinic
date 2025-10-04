@@ -1,5 +1,4 @@
 const API_BASE_URL = window.location.origin;
-
 let currentStep = 1;
 const totalSteps = 4;
 
@@ -320,7 +319,7 @@ document.getElementById('registerForm').addEventListener('submit', async functio
     console.log('Attempting doctor registration...', registrationData);
 
     try {
-        const response = await fetch('http://localhost:3000/api/register/doctor', {
+        const response = await fetch('/api/register/doctor', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -356,7 +355,7 @@ document.getElementById('registerForm').addEventListener('submit', async functio
 // Test server connection on page load
 window.addEventListener('load', async function() {
     try {
-        const response = await fetch('http://localhost:3000/api/health');
+        const response = await fetch(`${API_BASE_URL}/api/health`);
         if (response.ok) {
             console.log('✅ Server connection successful');
         }
