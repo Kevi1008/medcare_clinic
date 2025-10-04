@@ -239,7 +239,7 @@ document.getElementById('registerForm').addEventListener('submit', async functio
 
     try {
         // Use absolute URL instead of relative path
-        const response = await fetch(`${API_BASE_URL}/api/register/patient`, {
+        const response = await fetch(`${API_BASE_URL}/api/register/user`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
