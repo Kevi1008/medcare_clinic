@@ -32,6 +32,7 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
+      connectSrc: ["'self'", "http://localhost:3000", "ws://localhost:3000"], // Add this line
       styleSrc: ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com"],
       scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-hashes'"],
       scriptSrcAttr: ["'self'", "'unsafe-inline'", "'unsafe-hashes'"],
@@ -42,7 +43,7 @@ app.use(helmet({
   crossOriginEmbedderPolicy: false
 }));
 
-// 4. Rate limiting
+// 4. Rate limiting 
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100,
