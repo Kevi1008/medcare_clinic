@@ -302,13 +302,13 @@ app.get('/admin-dashboard.html', (req, res) => {
 
 // ==================== API ROUTES ====================
 
-app.get('/api/health', (req, res) => {
-    res.json({ 
-        status: 'ok', 
-        message: 'Server is running',
-        mongodb: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
-    });
-});
+// app.get('/api/health', (req, res) => {
+//     res.json({ 
+//         status: 'ok', 
+//         message: 'Server is running',
+//         mongodb: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
+//     });
+// });
 
 app.post('/api/register', async (req, res) => {
     try {

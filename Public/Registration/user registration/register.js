@@ -274,17 +274,17 @@ document.getElementById('registerForm').addEventListener('submit', async functio
 });
 
 // Test server connection on page load
-window.addEventListener('load', async function() {
-    try {
-        const response = await fetch('http://localhost:3000/api/health');
-        if (response.ok) {
-            console.log('✅ Server connection successful');
-        }
-    } catch (error) {
-        console.error('❌ Cannot connect to server:', error);
-        showAlert('error', 'Cannot connect to server. Make sure the backend is running on port 3000.');
-    }
-});
+// window.addEventListener('load', async function() {
+//     try {
+//         const response = await fetch('http://localhost:3000');
+//         if (response.ok) {
+//             console.log('✅ Server connection successful');
+//         }
+//     } catch (error) {
+//         console.error('❌ Cannot connect to server:', error);
+//         showAlert('error', 'Cannot connect to server. Make sure the backend is running on port 3000.');
+//     }
+// });
 
 // Terms and Privacy modals
 function showTerms() {
