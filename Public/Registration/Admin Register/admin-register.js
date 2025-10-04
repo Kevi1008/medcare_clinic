@@ -1,3 +1,4 @@
+// Fix the API base URL - use absolute path
 const API_BASE_URL = window.location.origin;
 let currentStep = 1;
 const totalSteps = 4;
@@ -23,7 +24,7 @@ function validatePassword() {
 function updateRequirement(id, isValid) {
     const element = document.getElementById(id);
     const icon = element.querySelector('i');
-    
+
     if (isValid) {
         element.classList.remove('invalid');
         element.classList.add('valid');
@@ -41,10 +42,10 @@ function updateRequirement(id, isValid) {
 document.getElementById('password').addEventListener('input', validatePassword);
 
 // Confirm password validation
-document.getElementById('confirmPassword').addEventListener('input', function() {
+document.getElementById('confirmPassword').addEventListener('input', function () {
     const password = document.getElementById('password').value;
     const confirmPassword = this.value;
-    
+
     if (confirmPassword && password !== confirmPassword) {
         this.style.borderColor = '#e74c3c';
         this.setCustomValidity('Passwords do not match');
@@ -79,7 +80,7 @@ function updateStepDisplay() {
     document.querySelectorAll('.step').forEach((step, index) => {
         const stepNumber = index + 1;
         step.classList.remove('active', 'completed');
-        
+
         if (stepNumber < currentStep) {
             step.classList.add('completed');
         } else if (stepNumber === currentStep) {
@@ -91,7 +92,7 @@ function updateStepDisplay() {
     document.querySelectorAll('.form-step').forEach((step, index) => {
         const stepNumber = index + 1;
         step.classList.remove('active');
-        
+
         if (stepNumber === currentStep) {
             step.classList.add('active');
         }
@@ -100,7 +101,7 @@ function updateStepDisplay() {
 
 function validateCurrentStep() {
     hideAlerts();
-    
+
     if (currentStep === 1) {
         const username = document.getElementById('username').value.trim();
         const email = document.getElementById('email').value.trim();
@@ -173,7 +174,7 @@ function validateCurrentStep() {
     } else if (currentStep === 4) {
         const agreeTerms = document.getElementById('agreeTerms').checked;
         const agreeConfidentiality = document.getElementById('agreeConfidentiality').checked;
-        
+
         if (!agreeTerms) {
             showAlert('error', 'You must agree to the Terms of Service and Privacy Policy');
             return false;
@@ -191,7 +192,7 @@ function validateCurrentStep() {
 function populateReview() {
     const reviewInfo = document.getElementById('reviewInfo');
     const formData = new FormData(document.getElementById('registerForm'));
-    
+
     // Get permissions
     const permissions = [];
     document.querySelectorAll('input[name="permissions"]:checked').forEach(checkbox => {
@@ -244,7 +245,7 @@ function showAlert(type, message) {
     const messageElement = document.getElementById(type + 'Message');
     messageElement.textContent = message;
     alertElement.style.display = 'block';
-    
+
     setTimeout(() => {
         alertElement.style.display = 'none';
     }, 5000);
@@ -278,7 +279,7 @@ function setLoading(isLoading) {
 // Form submission
 async function handleAdminRegistration(e) {
     e.preventDefault();
-    
+
     if (!validateCurrentStep()) {
         return;
     }
@@ -287,7 +288,7 @@ async function handleAdminRegistration(e) {
     hideAlerts();
 
     const formData = new FormData(document.getElementById('registerForm'));
-    
+
     // Get permissions
     const permissions = {};
     document.querySelectorAll('input[name="permissions"]').forEach(checkbox => {
@@ -311,7 +312,7 @@ async function handleAdminRegistration(e) {
     console.log('Attempting admin registration...', registrationData);
 
     try {
-        const response = await fetch('http://localhost:3000/api/register/admin', {
+        const response = await fetch('/api/register/admin', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -326,10 +327,10 @@ async function handleAdminRegistration(e) {
 
         if (response.ok) {
             showAlert('success', 'Admin account created successfully! You can now login with your credentials.');
-            
+
             // Store email for login page
             localStorage.setItem('registeredEmail', registrationData.email);
-            
+
             setTimeout(() => {
                 window.location.href = '/login';
             }, 3000);
@@ -345,9 +346,9 @@ async function handleAdminRegistration(e) {
 }
 
 // Test server connection on page load
-window.addEventListener('load', async function() {
+window.addEventListener('load', async function () {
     try {
-        const response = await fetch('http://localhost:3000/api/health');
+        const response = await fetch(`${API_BASE_URL}/api/health`);
         if (response.ok) {
             console.log('✅ Server connection successful');
         }
@@ -368,16 +369,16 @@ function showPrivacy() {
 
 // Input animations and validations
 document.querySelectorAll('input, select, textarea').forEach(input => {
-    input.addEventListener('focus', function() {
+    input.addEventListener('focus', function () {
         this.parentNode.style.transform = 'translateY(-2px)';
     });
 
-    input.addEventListener('blur', function() {
+    input.addEventListener('blur', function () {
         this.parentNode.style.transform = 'translateY(0)';
     });
 
     // Real-time validation
-    input.addEventListener('input', function() {
+    input.addEventListener('input', function () {
         if (this.checkValidity()) {
             this.style.borderColor = '#27ae60';
         } else if (this.value) {
@@ -389,15 +390,15 @@ document.querySelectorAll('input, select, textarea').forEach(input => {
 });
 
 // Add event listeners when DOM loads
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     // Password validation
     document.getElementById('password')?.addEventListener('input', validatePassword);
-    
+
     // Confirm password validation
-    document.getElementById('confirmPassword')?.addEventListener('input', function() {
+    document.getElementById('confirmPassword')?.addEventListener('input', function () {
         const password = document.getElementById('password').value;
         const confirmPassword = this.value;
-        
+
         if (confirmPassword && password !== confirmPassword) {
             this.style.borderColor = '#e74c3c';
         } else {

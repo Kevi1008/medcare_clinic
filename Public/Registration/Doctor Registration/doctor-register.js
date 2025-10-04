@@ -1,3 +1,4 @@
+// Fix the API base URL - use absolute path
 const API_BASE_URL = window.location.origin;
 let currentStep = 1;
 const totalSteps = 4;

@@ -1,8 +1,7 @@
 // Fix the API base URL - use absolute path
 const API_BASE_URL = window.location.origin;
-
 let currentStep = 1;
-const totalSteps = 3;
+const totalSteps = 4;
 
 // Password validation
 function validatePassword() {
@@ -240,7 +239,7 @@ document.getElementById('registerForm').addEventListener('submit', async functio
 
     try {
         // Use absolute URL instead of relative path
-        const response = await fetch(`${API_BASE_URL}/api/register/doctor`, {
+        const response = await fetch('/api/register/user', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -276,7 +275,7 @@ document.getElementById('registerForm').addEventListener('submit', async functio
 // Test server connection on page load
 window.addEventListener('load', async function () {
     try {
-        const response = await fetch('http://localhost:3000');
+        const response = await fetch(`${API_BASE_URL}/api/health`);
         if (response.ok) {
             console.log('✅ Server connection successful');
         }
