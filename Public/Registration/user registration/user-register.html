@@ -6,7 +6,6 @@
     <title>Register - MedCare Clinic</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/Registration/user registration/register.css">
-    <!-- <link rel="stylesheet" href="/server.js"> -->
 </head>
 <body>
     <a href="/home.html" class="back-home">
@@ -106,7 +105,7 @@
                     </div>
 
                     <div class="btn-group">
-                        <button type="button" class="btn btn-primary" onclick="nextStep()">
+                        <button type="button" class="btn btn-primary" data-action="next">
                             Next <i class="fas fa-arrow-right"></i>
                         </button>
                     </div>
@@ -163,10 +162,10 @@
                     </div>
 
                     <div class="btn-group">
-                        <button type="button" class="btn btn-secondary" onclick="prevStep()">
+                        <button type="button" class="btn btn-secondary" data-action="prev">
                             <i class="fas fa-arrow-left"></i> Previous
                         </button>
-                        <button type="button" class="btn btn-primary" onclick="nextStep()">
+                        <button type="button" class="btn btn-primary" data-action="next">
                             Next <i class="fas fa-arrow-right"></i>
                         </button>
                     </div>
@@ -183,8 +182,8 @@
                     <div class="terms-agreement">
                         <label>
                             <input type="checkbox" id="agreeTerms" name="agreeTerms" required>
-                            I agree to the <a href="#" onclick="showTerms()">Terms of Service</a> and 
-                            <a href="#" onclick="showPrivacy()">Privacy Policy</a>
+                            I agree to the <a href="#" class="terms-link">Terms of Service</a> and 
+                            <a href="#" class="privacy-link">Privacy Policy</a>
                         </label>
                     </div>
 
@@ -196,7 +195,7 @@
                     </div>
 
                     <div class="btn-group">
-                        <button type="button" class="btn btn-secondary" onclick="prevStep()">
+                        <button type="button" class="btn btn-secondary" data-action="prev">
                             <i class="fas fa-arrow-left"></i> Previous
                         </button>
                         <button type="submit" class="btn btn-primary" id="registerBtn">
@@ -214,6 +213,6 @@
         </div>
     </div>
 
-    <script src="/Registration/user registration/register.js"></script>
+    <script src="/Registration/user registration/user-register.js"></script>
 </body>
 </html>

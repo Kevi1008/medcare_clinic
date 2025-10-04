@@ -13,6 +13,10 @@ require('dotenv').config();
 const PORT = process.env.PORT || 3000;
 
 // ==================== MIDDLEWARE ====================
+// IMPORTANT: Add this BEFORE other middleware
+app.use(express.static(path.join(__dirname)));
+
+app.use(express.json());
 
 // 1. Security middleware to block sensitive files - FIRST!
 app.use((req, res, next) => {
@@ -300,6 +304,9 @@ app.get('/admin-dashboard.html', (req, res) => {
 // app.get('/home.html', (req, res) => {
 //     res.redirect('/');
 // });
+
+// Add this before your API routes
+app.use('/Registration', express.static(path.join(__dirname, 'Registration')));
 
 // ==================== API ROUTES ====================
 

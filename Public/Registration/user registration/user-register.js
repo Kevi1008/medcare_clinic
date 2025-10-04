@@ -23,6 +23,8 @@ function validatePassword() {
 
 function updateRequirement(id, isValid) {
     const element = document.getElementById(id);
+    if (!element) return;
+    
     const icon = element.querySelector('i');
 
     if (isValid) {
@@ -38,24 +40,7 @@ function updateRequirement(id, isValid) {
     }
 }
 
-// Password input event listener
-document.getElementById('password').addEventListener('input', validatePassword);
-
-// Confirm password validation
-document.getElementById('confirmPassword').addEventListener('input', function () {
-    const password = document.getElementById('password').value;
-    const confirmPassword = this.value;
-
-    if (confirmPassword && password !== confirmPassword) {
-        this.style.borderColor = '#e74c3c';
-        this.setCustomValidity('Passwords do not match');
-    } else {
-        this.style.borderColor = '#e1e5e9';
-        this.setCustomValidity('');
-    }
-});
-
-// Step navigation
+// Step navigation functions
 function nextStep() {
     if (validateCurrentStep()) {
         if (currentStep < totalSteps) {
@@ -178,6 +163,8 @@ function populateReview() {
 function showAlert(type, message) {
     const alertElement = document.getElementById(type + 'Alert');
     const messageElement = document.getElementById(type + 'Message');
+    if (!alertElement || !messageElement) return;
+    
     messageElement.textContent = message;
     alertElement.style.display = 'block';
 
@@ -187,8 +174,11 @@ function showAlert(type, message) {
 }
 
 function hideAlerts() {
-    document.getElementById('errorAlert').style.display = 'none';
-    document.getElementById('successAlert').style.display = 'none';
+    const errorAlert = document.getElementById('errorAlert');
+    const successAlert = document.getElementById('successAlert');
+    
+    if (errorAlert) errorAlert.style.display = 'none';
+    if (successAlert) successAlert.style.display = 'none';
 }
 
 // Loading state management
@@ -197,6 +187,8 @@ function setLoading(isLoading) {
     const registerText = document.getElementById('registerText');
     const registerSpinner = document.getElementById('registerSpinner');
     const registerIcon = document.getElementById('registerIcon');
+
+    if (!registerBtn || !registerText || !registerSpinner || !registerIcon) return;
 
     if (isLoading) {
         registerBtn.disabled = true;
@@ -211,65 +203,153 @@ function setLoading(isLoading) {
     }
 }
 
-// Form submission - FIXED VERSION
-document.getElementById('registerForm').addEventListener('submit', async function (e) {
-    e.preventDefault();
+// Terms and Privacy modals
+function showTerms(e) {
+    if (e) e.preventDefault();
+    alert('Terms of Service:\n\n1. Use this service responsibly\n2. Provide accurate information\n3. Keep your account secure\n4. Respect other users\n5. Follow all applicable laws');
+}
 
-    if (!validateCurrentStep()) {
-        return;
+function showPrivacy(e) {
+    if (e) e.preventDefault();
+    alert('Privacy Policy:\n\n1. We protect your personal information\n2. Medical data is encrypted\n3. We do not sell your data\n4. You can request data deletion\n5. We comply with healthcare privacy laws');
+}
+
+// Initialize event listeners when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM Content Loaded - Initializing...');
+
+    // Password input event listener
+    const passwordInput = document.getElementById('password');
+    if (passwordInput) {
+        passwordInput.addEventListener('input', validatePassword);
     }
 
-    setLoading(true);
-    hideAlerts();
+    // Confirm password validation
+    const confirmPasswordInput = document.getElementById('confirmPassword');
+    if (confirmPasswordInput) {
+        confirmPasswordInput.addEventListener('input', function () {
+            const password = document.getElementById('password').value;
+            const confirmPassword = this.value;
 
-    const formData = new FormData(this);
-    const registrationData = {
-        username: formData.get('username'),
-        email: formData.get('email'),
-        password: formData.get('password'),
-        firstName: formData.get('firstName'),
-        lastName: formData.get('lastName'),
-        phone: formData.get('phone'),
-        dateOfBirth: formData.get('dateOfBirth'),
-        gender: formData.get('gender'),
-        address: formData.get('address')
-    };
+            if (confirmPassword && password !== confirmPassword) {
+                this.style.borderColor = '#e74c3c';
+                this.setCustomValidity('Passwords do not match');
+            } else {
+                this.style.borderColor = '#e1e5e9';
+                this.setCustomValidity('');
+            }
+        });
+    }
 
-    console.log('Attempting registration...', registrationData);
+    // Navigation buttons
+    document.querySelectorAll('[data-action="next"]').forEach(button => {
+        button.addEventListener('click', nextStep);
+    });
+    
+    document.querySelectorAll('[data-action="prev"]').forEach(button => {
+        button.addEventListener('click', prevStep);
+    });
+    
+    // Terms and Privacy links
+    document.querySelectorAll('.terms-link').forEach(link => {
+        link.addEventListener('click', showTerms);
+    });
+    
+    document.querySelectorAll('.privacy-link').forEach(link => {
+        link.addEventListener('click', showPrivacy);
+    });
 
-    try {
-        // Use absolute URL instead of relative path
-        const response = await fetch(`${API_BASE_URL}/api/register/user`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(registrationData)
+    // Input animations and validations
+    document.querySelectorAll('input, select, textarea').forEach(input => {
+        input.addEventListener('focus', function () {
+            if (this.parentNode) {
+                this.parentNode.style.transform = 'translateY(-2px)';
+            }
         });
 
-        console.log('Response status:', response.status);
+        input.addEventListener('blur', function () {
+            if (this.parentNode) {
+                this.parentNode.style.transform = 'translateY(0)';
+            }
+        });
 
-        const data = await response.json();
-        console.log('Response data:', data);
+        // Real-time validation
+        input.addEventListener('input', function () {
+            if (this.checkValidity()) {
+                this.style.borderColor = '#27ae60';
+            } else if (this.value) {
+                this.style.borderColor = '#e74c3c';
+            } else {
+                this.style.borderColor = '#e1e5e9';
+            }
+        });
+    });
 
-        if (response.ok) {
-            showAlert('success', 'Account created successfully! Redirecting to login page...');
+    // Form submission
+    const registerForm = document.getElementById('registerForm');
+    if (registerForm) {
+        registerForm.addEventListener('submit', async function (e) {
+            e.preventDefault();
 
-            // Store email for login page
-            localStorage.setItem('registeredEmail', registrationData.email);
+            if (!validateCurrentStep()) {
+                return;
+            }
 
-            setTimeout(() => {
-                window.location.href = '/login';
-            }, 2000);
-        } else {
-            showAlert('error', data.error || 'Registration failed. Please try again.');
-        }
-    } catch (error) {
-        console.error('Registration error:', error);
-        showAlert('error', 'Cannot connect to server. Make sure the backend is running on port 3000.');
-    } finally {
-        setLoading(false);
+            setLoading(true);
+            hideAlerts();
+
+            const formData = new FormData(this);
+            const registrationData = {
+                username: formData.get('username'),
+                email: formData.get('email'),
+                password: formData.get('password'),
+                firstName: formData.get('firstName'),
+                lastName: formData.get('lastName'),
+                phone: formData.get('phone'),
+                dateOfBirth: formData.get('dateOfBirth'),
+                gender: formData.get('gender'),
+                address: formData.get('address')
+            };
+
+            console.log('Attempting registration...', registrationData);
+
+            try {
+                // Use absolute URL instead of relative path
+                const response = await fetch(`${API_BASE_URL}/api/register`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(registrationData)
+                });
+
+                console.log('Response status:', response.status);
+
+                const data = await response.json();
+                console.log('Response data:', data);
+
+                if (response.ok) {
+                    showAlert('success', 'Account created successfully! Redirecting to login page...');
+
+                    setTimeout(() => {
+                        window.location.href = '/login';
+                    }, 2000);
+                } else {
+                    showAlert('error', data.error || 'Registration failed. Please try again.');
+                }
+            } catch (error) {
+                console.error('Registration error:', error);
+                showAlert('error', 'Cannot connect to server. Make sure the backend is running on port 3000.');
+            } finally {
+                setLoading(false);
+            }
+        });
     }
+    
+    // Initialize first step
+    updateStepDisplay();
+
+    console.log('✅ All event listeners initialized');
 });
 
 // Test server connection on page load
@@ -281,37 +361,5 @@ window.addEventListener('load', async function () {
         }
     } catch (error) {
         console.error('❌ Cannot connect to server:', error);
-        showAlert('error', 'Cannot connect to server. Make sure the backend is running on port 3000.');
     }
-});
-
-// Terms and Privacy modals
-function showTerms() {
-    alert('Terms of Service:\n\n1. Use this service responsibly\n2. Provide accurate information\n3. Keep your account secure\n4. Respect other users\n5. Follow all applicable laws');
-}
-
-function showPrivacy() {
-    alert('Privacy Policy:\n\n1. We protect your personal information\n2. Medical data is encrypted\n3. We do not sell your data\n4. You can request data deletion\n5. We comply with healthcare privacy laws');
-}
-
-// Input animations and validations
-document.querySelectorAll('input, select, textarea').forEach(input => {
-    input.addEventListener('focus', function () {
-        this.parentNode.style.transform = 'translateY(-2px)';
-    });
-
-    input.addEventListener('blur', function () {
-        this.parentNode.style.transform = 'translateY(0)';
-    });
-
-    // Real-time validation
-    input.addEventListener('input', function () {
-        if (this.checkValidity()) {
-            this.style.borderColor = '#27ae60';
-        } else if (this.value) {
-            this.style.borderColor = '#e74c3c';
-        } else {
-            this.style.borderColor = '#e1e5e9';
-        }
-    });
 });

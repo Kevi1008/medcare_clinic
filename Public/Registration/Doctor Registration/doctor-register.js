@@ -59,8 +59,8 @@ document.getElementById('confirmPassword').addEventListener('input', function() 
 function nextStep() {
     if (validateCurrentStep()) {
         if (currentStep < totalSteps) {
-            currentStep++;
-            updateStepDisplay();
+            currentStep++;nextStep()
+            updateStepDisplay();nextStep()
             if (currentStep === 4) {
                 populateReview();
             }
