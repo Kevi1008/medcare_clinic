@@ -312,7 +312,8 @@ async function handleAdminRegistration(e) {
     console.log('Attempting admin registration...', registrationData);
 
     try {
-        const response = await fetch('/api/register/admin', {
+        // Use absolute URL instead of relative path
+        const response = await fetch(`${API_BASE_URL}/api/register/admin`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -348,7 +349,7 @@ async function handleAdminRegistration(e) {
 // Test server connection on page load
 window.addEventListener('load', async function () {
     try {
-        const response = await fetch(`${API_BASE_URL}/api/health`);
+        const response = await fetch('/api/health');
         if (response.ok) {
             console.log('✅ Server connection successful');
         }
