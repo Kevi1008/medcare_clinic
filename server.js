@@ -601,6 +601,6 @@ app.use((err, req, res, next) => {
 
 app.listen(PORT, () => {
     console.log(`🚀 Server is running on http://localhost:${PORT}`);
-    console.log(`📊 MongoDB URI: ${MONGODB_URI}`);
+    console.log(`📊 Mongo URI: ${MONGO_URI}`);
     console.log(`📁 Serving static files from: ${path.join(__dirname, 'Public')}`);
 });
