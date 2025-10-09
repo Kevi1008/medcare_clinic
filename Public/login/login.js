@@ -6,22 +6,48 @@ document.querySelectorAll('.role-option').forEach(option => {
         document.querySelectorAll('.role-option').forEach(opt => opt.classList.remove('active'));
         this.classList.add('active');
         selectedRole = this.dataset.role;
+        
+        // Update form action based on role
+        updateFormForRole();
     });
 });
+
+// Update form based on selected role
+function updateFormForRole() {
+    const roleHint = document.getElementById('roleHint');
+    const loginTitle = document.querySelector('.login-title');
+    
+    switch(selectedRole) {
+        case 'admin':
+            roleHint.textContent = 'Administrator access to manage the entire clinic system';
+            if (loginTitle) loginTitle.textContent = 'Admin Sign In';
+            break;
+        case 'doctor':
+            roleHint.textContent = 'Medical professional access to patient management';
+            if (loginTitle) loginTitle.textContent = 'Doctor Sign In';
+            break;
+        case 'patient':
+            roleHint.textContent = 'Patient access to book appointments and view records';
+            if (loginTitle) loginTitle.textContent = 'Patient Sign In';
+            break;
+    }
+}
 
 // Password toggle functionality
 function togglePassword() {
     const passwordInput = document.getElementById('password');
     const toggleIcon = document.querySelector('.password-toggle i');
     
-    if (passwordInput.type === 'password') {
-        passwordInput.type = 'text';
-        toggleIcon.classList.remove('fa-eye');
-        toggleIcon.classList.add('fa-eye-slash');
-    } else {
-        passwordInput.type = 'password';
-        toggleIcon.classList.remove('fa-eye-slash');
-        toggleIcon.classList.add('fa-eye');
+    if (passwordInput && toggleIcon) {
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            toggleIcon.classList.remove('fa-eye');
+            toggleIcon.classList.add('fa-eye-slash');
+        } else {
+            passwordInput.type = 'password';
+            toggleIcon.classList.remove('fa-eye-slash');
+            toggleIcon.classList.add('fa-eye');
+        }
     }
 }
 
@@ -29,17 +55,37 @@ function togglePassword() {
 function showAlert(type, message) {
     const alertElement = document.getElementById(type + 'Alert');
     const messageElement = document.getElementById(type + 'Message');
+    
+    if (!alertElement || !messageElement) return;
+    
+    // Hide all alerts first
+    hideAlerts();
+    
+    // Show the specific alert
     messageElement.textContent = message;
     alertElement.style.display = 'block';
+    alertElement.style.opacity = '1';
     
+    // Auto-hide after 5 seconds
     setTimeout(() => {
-        alertElement.style.display = 'none';
+        hideAlert(alertElement);
     }, 5000);
 }
 
+function hideAlert(alertElement) {
+    if (alertElement) {
+        alertElement.style.opacity = '0';
+        setTimeout(() => {
+            alertElement.style.display = 'none';
+        }, 500);
+    }
+}
+
 function hideAlerts() {
-    document.getElementById('errorAlert').style.display = 'none';
-    document.getElementById('successAlert').style.display = 'none';
+    const alerts = document.querySelectorAll('.alert');
+    alerts.forEach(alert => {
+        hideAlert(alert);
+    });
 }
 
 // Loading state management
@@ -49,43 +95,71 @@ function setLoading(isLoading) {
     const loginSpinner = document.getElementById('loginSpinner');
     const loginIcon = document.getElementById('loginIcon');
 
+    if (!loginBtn || !loginText) return;
+
     if (isLoading) {
         loginBtn.disabled = true;
         loginText.textContent = 'Signing In...';
-        loginSpinner.style.display = 'block';
-        loginIcon.style.display = 'none';
+        if (loginSpinner) loginSpinner.style.display = 'inline-block';
+        if (loginIcon) loginIcon.style.display = 'none';
+        
+        // Add loading class to form
+        const loginForm = document.getElementById('loginForm');
+        if (loginForm) loginForm.classList.add('loading');
     } else {
         loginBtn.disabled = false;
         loginText.textContent = 'Sign In';
-        loginSpinner.style.display = 'none';
-        loginIcon.style.display = 'block';
+        if (loginSpinner) loginSpinner.style.display = 'none';
+        if (loginIcon) loginIcon.style.display = 'inline-block';
+        
+        // Remove loading class
+        const loginForm = document.getElementById('loginForm');
+        if (loginForm) loginForm.classList.remove('loading');
     }
 }
 
-// Form validation
+// Enhanced form validation
 function validateForm(formData) {
-    const email = formData.get('email');
+    const email = formData.get('email').trim();
     const password = formData.get('password');
 
-    if (!email || !email.includes('@')) {
-        showAlert('error', 'Please enter a valid email address');
+    // Email validation
+    if (!email) {
+        showAlert('error', 'Please enter your email address');
+        document.getElementById('email').focus();
         return false;
     }
 
-    if (!password || password.length < 6) {
+    if (!email.includes('@') || !email.includes('.')) {
+        showAlert('error', 'Please enter a valid email address');
+        document.getElementById('email').focus();
+        return false;
+    }
+
+    // Password validation
+    if (!password) {
+        showAlert('error', 'Please enter your password');
+        document.getElementById('password').focus();
+        return false;
+    }
+
+    if (password.length < 6) {
         showAlert('error', 'Password must be at least 6 characters long');
+        document.getElementById('password').focus();
         return false;
     }
 
     return true;
 }
 
-// Login form submission
+// Enhanced login form submission
 document.getElementById('loginForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     hideAlerts();
 
     const formData = new FormData(this);
+    const email = formData.get('email').trim();
+    const password = formData.get('password');
     
     if (!validateForm(formData)) {
         return;
@@ -95,8 +169,9 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
 
     try {
         console.log('🔐 Attempting login with:', {
-            email: formData.get('email'),
-            userType: selectedRole
+            email: email,
+            userType: selectedRole,
+            timestamp: new Date().toISOString()
         });
 
         const response = await fetch('/api/login', {
@@ -105,107 +180,113 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                email: formData.get('email'),
-                password: formData.get('password'),
+                email: email,
+                password: password,
                 userType: selectedRole
             })
         });
 
         const data = await response.json();
-        console.log('📥 Login response:', data);
+        console.log('📥 Login response:', {
+            status: response.status,
+            ok: response.ok,
+            data: data
+        });
 
-        if (response.ok) {
-            // ✅ Store authentication data - FIXED: Use sessionId instead of authToken
-            if (data.sessionId) {
-                localStorage.setItem('sessionId', data.sessionId);
-                console.log('✅ Session ID stored:', data.sessionId);
-            } else {
-                console.warn('⚠️ No sessionId in response, using demo token');
-                localStorage.setItem('sessionId', 'demo-session-id');
-            }
-            
+        if (response.ok && data.sessionId) {
+            // ✅ Store authentication data
+            localStorage.setItem('sessionId', data.sessionId);
             localStorage.setItem('userRole', data.user.role);
             localStorage.setItem('userData', JSON.stringify(data.user));
+            
+            // Store login timestamp
+            localStorage.setItem('loginTime', new Date().toISOString());
 
-            // Debug: Verify storage
-            console.log('📦 LocalStorage after login:', {
-                sessionId: localStorage.getItem('sessionId'),
-                userRole: localStorage.getItem('userRole'),
-                userData: localStorage.getItem('userData')
+            console.log('✅ Login successful, stored data:', {
+                sessionId: data.sessionId,
+                userRole: data.user.role,
+                userId: data.user.id
             });
 
             // Show success message
-            showAlert('success', 'Login successful! Redirecting...');
+            showAlert('success', `Welcome back, ${data.user.firstName || data.user.email}! Redirecting...`);
 
             // Remember me functionality
-            if (document.getElementById('rememberMe').checked) {
-                localStorage.setItem('rememberEmail', formData.get('email'));
+            const rememberMe = document.getElementById('rememberMe');
+            if (rememberMe && rememberMe.checked) {
+                localStorage.setItem('rememberEmail', email);
+                localStorage.setItem('rememberRole', selectedRole);
             } else {
                 localStorage.removeItem('rememberEmail');
+                localStorage.removeItem('rememberRole');
             }
 
-            // Redirect based on role - FIXED: Use clean URLs without .html
+            // Redirect with smooth transition
             setTimeout(() => {
-                const dashboardPaths = {
-                    'admin': '/admin-dashboard',
-                    'doctor': '/doctor-dashboard',
-                    'patient': '/patient-dashboard'
-                };
-                
-                const dashboardPath = dashboardPaths[data.user.role] || '/';
-                console.log('🔄 Redirecting to:', dashboardPath);
-                window.location.href = dashboardPath;
+                redirectToDashboard(data.user.role);
             }, 1500);
 
         } else {
-            console.error('❌ Login failed:', data.error);
-            showAlert('error', data.error || 'Login failed. Please try again.');
+            // Handle different error types
+            const errorMessage = data.error || data.message || 'Login failed. Please try again.';
+            console.error('❌ Login failed:', errorMessage);
+            
+            showAlert('error', errorMessage);
+            
+            // Clear password field on failure
+            document.getElementById('password').value = '';
         }
     } catch (error) {
-        console.error('💥 Login error:', error);
+        console.error('💥 Network error:', error);
         showAlert('error', 'Network error. Please check your connection and try again.');
     } finally {
         setLoading(false);
     }
 });
 
-// Forgot password functionality
+// Enhanced redirect function
+function redirectToDashboard(userRole) {
+    const dashboardPaths = {
+        'admin': '/admin-dashboard',
+        'doctor': '/doctor-dashboard',
+        'patient': '/patient-dashboard'
+    };
+    
+    const dashboardPath = dashboardPaths[userRole] || '/';
+    console.log('🔄 Redirecting to:', dashboardPath);
+    
+    window.location.href = dashboardPath;
+}
+
+// Enhanced forgot password functionality
 function showForgotPassword() {
-    const email = document.getElementById('email').value;
+    const email = document.getElementById('email').value.trim();
+    
     if (!email) {
         showAlert('error', 'Please enter your email address first');
+        document.getElementById('email').focus();
         return;
     }
 
-    showAlert('success', 'Password reset instructions will be sent to your email shortly.');
+    if (!email.includes('@') || !email.includes('.')) {
+        showAlert('error', 'Please enter a valid email address');
+        document.getElementById('email').focus();
+        return;
+    }
+
+    // Simulate password reset process
+    setLoading(true);
+    
+    setTimeout(() => {
+        setLoading(false);
+        showAlert('success', `Password reset instructions have been sent to ${email}`);
+        
+        // Log this action
+        console.log('📧 Password reset requested for:', email);
+    }, 2000);
 }
 
-// Load remembered email and check existing session
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('🚀 Login page loaded');
-    
-    // Load remembered email
-    const rememberedEmail = localStorage.getItem('rememberEmail');
-    if (rememberedEmail) {
-        document.getElementById('email').value = rememberedEmail;
-        document.getElementById('rememberMe').checked = true;
-    }
-
-    // Check if already logged in - FIXED: Check sessionId instead of authToken
-    const sessionId = localStorage.getItem('sessionId');
-    const userRole = localStorage.getItem('userRole');
-    
-    console.log('🔍 Existing session check:', { sessionId, userRole });
-    
-    if (sessionId && userRole) {
-        console.log('🔄 User already logged in, redirecting...');
-        
-        // Verify session with server before redirecting
-        verifySessionAndRedirect(sessionId, userRole);
-    }
-});
-
-// Verify session with server before auto-redirect
+// Enhanced session verification
 async function verifySessionAndRedirect(sessionId, userRole) {
     try {
         console.log('🔐 Verifying existing session...');
@@ -217,20 +298,16 @@ async function verifySessionAndRedirect(sessionId, userRole) {
         });
 
         if (response.ok) {
-            console.log('✅ Session is valid, redirecting...');
+            const userData = await response.json();
+            console.log('✅ Session is valid for user:', userData.user);
             
-            // Redirect based on role - FIXED: Use clean URLs
+            // Show welcome back message
+            showAlert('success', `Welcome back, ${userData.user.firstName || userData.user.email}!`);
+            
+            // Redirect after short delay
             setTimeout(() => {
-                const dashboardPaths = {
-                    'admin': '/admin-dashboard',
-                    'doctor': '/doctor-dashboard', 
-                    'patient': '/patient-dashboard'
-                };
-                
-                const dashboardPath = dashboardPaths[userRole] || '/';
-                console.log('🔄 Auto-redirecting to:', dashboardPath);
-                window.location.href = dashboardPath;
-            }, 500);
+                redirectToDashboard(userRole);
+            }, 1000);
         } else {
             console.log('❌ Session invalid, clearing storage');
             clearAuthData();
@@ -241,103 +318,147 @@ async function verifySessionAndRedirect(sessionId, userRole) {
     }
 }
 
-// Clear authentication data
+// Enhanced clear authentication data
 function clearAuthData() {
-    localStorage.removeItem('sessionId');
-    localStorage.removeItem('userRole');
-    localStorage.removeItem('userData');
+    const itemsToRemove = [
+        'sessionId',
+        'userRole', 
+        'userData',
+        'loginTime'
+    ];
+    
+    itemsToRemove.forEach(item => {
+        localStorage.removeItem(item);
+    });
+    
     console.log('🧹 Auth data cleared');
 }
 
-// Keyboard shortcuts
-document.addEventListener('keydown', function(e) {
-    if (e.ctrlKey && e.key === 'Enter') {
-        document.getElementById('loginForm').dispatchEvent(new Event('submit'));
-    }
-});
-
-// Input animations
-document.querySelectorAll('input').forEach(input => {
-    input.addEventListener('focus', function() {
-        this.parentNode.style.transform = 'translateY(-3px)';
-    });
-
-    input.addEventListener('blur', function() {
-        this.parentNode.style.transform = 'translateY(0)';
-    });
-});
-
-// Demo login credentials info
+// Enhanced initialization
 document.addEventListener('DOMContentLoaded', function() {
-    const demoInfo = document.createElement('div');
-    demoInfo.style.cssText = `
-        position: fixed;
-        bottom: 2rem;
-        right: 2rem;
-        background: rgba(255, 255, 255, 0.9);
-        padding: 1rem;
-        border-radius: 10px;
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-        font-size: 0.9rem;
-        max-width: 250px;
-        z-index: 1000;
-    `;
-    demoInfo.innerHTML = `
-        <strong>Demo Credentials:</strong><br>
-        • Patient: patient@demo.com / patient123<br>
-        • Doctor: doctor@demo.com / doctor123<br>
-        • Admin: admin@demo.com / admin123
-    `;
-    document.body.appendChild(demoInfo);
+    console.log('🚀 Login page initialized');
+    
+    // Initialize role selection
+    updateFormForRole();
+    
+    // Load remembered credentials
+    const rememberedEmail = localStorage.getItem('rememberEmail');
+    const rememberedRole = localStorage.getItem('rememberRole');
+    
+    if (rememberedEmail) {
+        document.getElementById('email').value = rememberedEmail;
+        document.getElementById('rememberMe').checked = true;
+    }
+    
+    if (rememberedRole) {
+        selectedRole = rememberedRole;
+        document.querySelectorAll('.role-option').forEach(opt => {
+            opt.classList.toggle('active', opt.dataset.role === rememberedRole);
+        });
+        updateFormForRole();
+    }
+    
+    // Check for existing valid session
+    const sessionId = localStorage.getItem('sessionId');
+    const userRole = localStorage.getItem('userRole');
+    
+    console.log('🔍 Session check:', { 
+        hasSession: !!sessionId, 
+        userRole: userRole,
+        rememberEmail: rememberedEmail 
+    });
+    
+    if (sessionId && userRole) {
+        console.log('🔄 Found existing session, verifying...');
+        verifySessionAndRedirect(sessionId, userRole);
+    }
+    
+    // Add input enhancements
+    enhanceFormInteractions();
 });
 
-// Add logout function
+// Enhanced form interactions
+function enhanceFormInteractions() {
+    // Input focus effects
+    document.querySelectorAll('input').forEach(input => {
+        input.addEventListener('focus', function() {
+            this.parentNode.classList.add('focused');
+        });
+
+        input.addEventListener('blur', function() {
+            this.parentNode.classList.remove('focused');
+        });
+    });
+    
+    // Enter key to submit
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            const focused = document.activeElement;
+            if (focused && focused.form) {
+                e.preventDefault();
+                document.getElementById('loginForm').dispatchEvent(new Event('submit'));
+            }
+        }
+    });
+}
+
+// Enhanced logout function
 function logout() {
     const sessionId = localStorage.getItem('sessionId');
+    
     if (sessionId) {
+        // Attempt to call logout API
         fetch('/api/logout', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({ sessionId })
-        }).catch(error => {
-            console.error('Logout API error:', error);
+        })
+        .catch(error => {
+            console.warn('⚠️ Logout API error (non-critical):', error);
+        })
+        .finally(() => {
+            clearAuthData();
+            window.location.href = '/login';
         });
+    } else {
+        clearAuthData();
+        window.location.href = '/login';
     }
-    clearAuthData();
-    window.location.href = '/login';
 }
 
-// Debug function to check current auth state
-function debugAuth() {
-    console.log('🔍 Current Auth State:', {
-        sessionId: localStorage.getItem('sessionId'),
-        userRole: localStorage.getItem('userRole'),
-        userData: localStorage.getItem('userData'),
-        rememberEmail: localStorage.getItem('rememberEmail')
-    });
-}
-
-// Make debug function available globally
-window.debugAuth = debugAuth;
+// Make functions available globally
+window.togglePassword = togglePassword;
+window.showForgotPassword = showForgotPassword;
 window.logout = logout;
 
-// Test function to simulate successful login (for development)
-function simulateLogin(role = 'doctor') {
-    localStorage.setItem('sessionId', 'demo-session-' + Date.now());
-    localStorage.setItem('userRole', role);
-    localStorage.setItem('userData', JSON.stringify({
-        id: 'demo-id',
-        firstName: 'Demo',
-        lastName: 'User',
-        email: 'demo@example.com',
-        role: role
-    }));
+// Add CSS for loading state
+const style = document.createElement('style');
+style.textContent = `
+    .loading {
+        pointer-events: none;
+        opacity: 0.7;
+    }
     
-    console.log('🎭 Simulated login as:', role);
-    window.location.href = '/' + role + '-dashboard';
-}
-
-// Make simulateLogin available for testing
-window.simulateLogin = simulateLogin;
+    .focused {
+        border-color: #667eea !important;
+        box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1) !important;
+    }
+    
+    .role-option.active {
+        transform: scale(1.05);
+        border-color: #667eea !important;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    @keyframes fadeOut {
+        from { opacity: 1; }
+        to { opacity: 0; }
+    }
+`;
+document.head.appendChild(style);

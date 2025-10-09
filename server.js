@@ -13,12 +13,11 @@ require('dotenv').config();
 const PORT = process.env.PORT || 3000;
 
 // ==================== MIDDLEWARE ====================
-// IMPORTANT: Add this BEFORE other middleware
 app.use(express.static(path.join(__dirname)));
 
 app.use(express.json());
 
-// 1. Security middleware to block sensitive files - FIRST!
+// 1. Security middleware to block sensitive files
 app.use((req, res, next) => {
     const sensitiveFiles = ['/server.js', '/.env', '/package.json', '/package-lock.json'];
     if (sensitiveFiles.includes(req.path)) {
@@ -28,7 +27,7 @@ app.use((req, res, next) => {
     next();
 });
 
-// 2. Static file serving - ONLY ONCE!
+// 2. Static file serving - FIXED PATH
 app.use(express.static(path.join(__dirname, 'Public')));
 
 // 3. Security middleware
@@ -55,9 +54,9 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
-// 5. CORS
+// 5. CORS - FIXED CONFIGURATION
 app.use(cors({
-  origin: ['http://localhost:3000', 'http://127.0.0.1:3000'],
+  origin: ['http://localhost:3000', 'http://127.0.0.1:3000', 'http://localhost:5500'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Session-Id']
@@ -65,16 +64,12 @@ app.use(cors({
 
 // 6. Body parsing middleware
 app.use(express.json({ 
-  limit: '10mb',
-  verify: (req, res, buf) => {
-    req.rawBody = buf.toString();
-  }
+  limit: '10mb'
 }));
 
 app.use(express.urlencoded({ 
   extended: true, 
-  limit: '10mb',
-  parameterLimit: 10000
+  limit: '10mb'
 }));
 
 // 7. Compression
@@ -87,26 +82,27 @@ app.use((req, res, next) => {
 });
 
 // ==================== DATABASE CONNECTION ====================
-// ✅ MongoDB Atlas connection
 const MONGO_URI = process.env.MONGO_URI;
 
 if (!MONGO_URI) {
-  console.error("❌ MONGO_URI is missing. Please set it in Render Environment Variables.");
-  process.exit(1);
+  console.error("❌ MONGO_URI is missing. Please set it in Environment Variables.");
+  // Don't exit in production, allow the app to start without DB
+  console.log("⚠️  Starting without database connection");
 }
 
-mongoose
-  .connect(MONGO_URI, {
+if (MONGO_URI) {
+  mongoose.connect(MONGO_URI, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
   .then(() => console.log("✅ MongoDB Connected"))
   .catch((err) => {
     console.error("❌ MongoDB Error:", err.message);
-    process.exit(1);
+    // Don't exit process, allow app to run without DB
   });
+}
 
-// ==================== ENHANCED SCHEMAS ====================
+// ==================== SIMPLIFIED SCHEMAS ====================
 
 const userSchema = new mongoose.Schema({
     username: { type: String, required: true, unique: true, trim: true, minlength: 3 },
@@ -130,31 +126,13 @@ const doctorSchema = new mongoose.Schema({
     firstName: { type: String, required: true, trim: true },
     lastName: { type: String, required: true, trim: true },
     phone: { type: String, required: true, trim: true },
-    dateOfBirth: { type: Date },
-    gender: { type: String, enum: ['male', 'female', 'other'] },
-    specialization: { 
-        type: String, 
-        required: true, 
-        trim: true,
-        enum: ['Cardiology', 'Neurology', 'General Medicine', 'Orthopedics', 'Pediatrics', 'Dermatology', 'Psychiatry']
-    },
+    specialization: { type: String, required: true, trim: true },
     licenseNumber: { type: String, required: true, unique: true, trim: true },
     qualification: { type: String, required: true, trim: true },
     experience: { type: Number, required: true, min: 0 },
     department: { type: String, required: true, trim: true },
     biography: { type: String, trim: true },
-    consultationFee: { type: Number, min: 0 },
-    availableDays: [{ type: String, enum: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] }],
-    availableTimeSlots: { type: String, trim: true },
-    availability: [{
-        day: {
-            type: String,
-            enum: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
-        },
-        startTime: String,
-        endTime: String
-    }],
-    profileImage: { type: String, default: null },
+    consultationFee: { type: Number, min: 0, default: 0 },
     isActive: { type: Boolean, default: true },
     isVerified: { type: Boolean, default: false },
     role: { type: String, default: 'doctor' },
@@ -172,475 +150,95 @@ const adminSchema = new mongoose.Schema({
     employeeId: { type: String, required: true, unique: true, trim: true },
     department: { type: String, required: true, trim: true },
     position: { type: String, required: true, trim: true },
-    accessLevel: { 
-        type: String, 
-        required: true, 
-        enum: ['super_admin', 'admin', 'manager'],
-        default: 'admin'
-    },
-    permissions: {
-        manageUsers: { type: Boolean, default: true },
-        manageDoctors: { type: Boolean, default: true },
-        manageAppointments: { type: Boolean, default: true },
-        viewReports: { type: Boolean, default: true },
-        manageSettings: { type: Boolean, default: false }
-    },
+    accessLevel: { type: String, default: 'admin', enum: ['super_admin', 'admin', 'manager'] },
     isActive: { type: Boolean, default: true },
     role: { type: String, default: 'admin' },
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now }
 });
 
-// Enhanced Patient Schema
 const patientSchema = new mongoose.Schema({
-    patientId: {
-        type: String,
-        required: true,
-        unique: true
-    },
-    firstName: {
-        type: String,
-        required: true,
-        trim: true
-    },
-    lastName: {
-        type: String,
-        required: true,
-        trim: true
-    },
-    email: {
-        type: String,
-        required: true,
-        unique: true,
-        lowercase: true,
-        trim: true
-    },
-    password: {
-        type: String,
-        required: true
-    },
-    phone: {
-        type: String,
-        required: true
-    },
-    dateOfBirth: {
-        type: Date,
-        required: true
-    },
-    gender: {
-        type: String,
-        enum: ['male', 'female', 'other'],
-        required: true
-    },
-    bloodGroup: {
-        type: String,
-        enum: ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']
-    },
-    address: {
-        street: String,
-        city: String,
-        state: String,
-        zipCode: String,
-        country: String
-    },
-    emergencyContact: {
-        name: String,
-        relationship: String,
-        phone: String
-    },
-    medicalHistory: {
-        allergies: [String],
-        chronicConditions: [String],
-        previousSurgeries: [{
-            surgery: String,
-            date: Date,
-            notes: String
-        }],
-        currentMedications: [String]
-    },
-    profileImage: {
-        type: String,
-        default: null
-    },
-    isActive: {
-        type: Boolean,
-        default: true
-    },
-    registeredDate: {
-        type: Date,
-        default: Date.now
-    },
-    lastVisit: {
-        type: Date,
-        default: null
-    },
-    createdAt: {
-        type: Date,
-        default: Date.now
-    },
-    updatedAt: {
-        type: Date,
-        default: Date.now
-    }
+    patientId: { type: String, required: true, unique: true },
+    firstName: { type: String, required: true, trim: true },
+    lastName: { type: String, required: true, trim: true },
+    email: { type: String, required: true, unique: true, lowercase: true, trim: true },
+    password: { type: String, required: true },
+    phone: { type: String, required: true },
+    dateOfBirth: { type: Date, required: true },
+    gender: { type: String, enum: ['male', 'female', 'other'], required: true },
+    bloodGroup: { type: String, enum: ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'] },
+    address: { type: String, trim: true },
+    isActive: { type: Boolean, default: true },
+    registeredDate: { type: Date, default: Date.now },
+    createdAt: { type: Date, default: Date.now },
+    updatedAt: { type: Date, default: Date.now }
 });
 
-// Appointment Schema
 const appointmentSchema = new mongoose.Schema({
-    appointmentId: {
-        type: String,
-        required: true,
-        unique: true
-    },
-    doctor: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Doctor',
-        required: true
-    },
-    patient: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Patient',
-        required: true
-    },
-    appointmentDate: {
-        type: Date,
-        required: true
-    },
+    appointmentId: { type: String, required: true, unique: true },
+    doctor: { type: mongoose.Schema.Types.ObjectId, ref: 'Doctor', required: true },
+    patient: { type: mongoose.Schema.Types.ObjectId, ref: 'Patient', required: true },
+    appointmentDate: { type: Date, required: true },
     timeSlot: {
-        startTime: {
-            type: String,
-            required: true
-        },
-        endTime: {
-            type: String,
-            required: true
-        }
+        startTime: { type: String, required: true },
+        endTime: { type: String, required: true }
     },
-    appointmentType: {
-        type: String,
-        enum: ['Consultation', 'Follow-up', 'Emergency', 'Routine Checkup'],
-        required: true
-    },
-    status: {
-        type: String,
-        enum: ['scheduled', 'completed', 'cancelled', 'pending', 'rescheduled'],
-        default: 'scheduled'
-    },
-    symptoms: {
-        type: String,
-        required: true
-    },
-    diagnosis: {
-        type: String,
-        default: null
-    },
-    notes: {
-        type: String,
-        default: null
-    },
-    cancelReason: {
-        type: String,
-        default: null
-    },
-    paymentStatus: {
-        type: String,
-        enum: ['pending', 'completed', 'refunded'],
-        default: 'pending'
-    },
-    amount: {
-        type: Number,
-        required: true
-    },
-    createdAt: {
-        type: Date,
-        default: Date.now
-    },
-    updatedAt: {
-        type: Date,
-        default: Date.now
-    }
+    appointmentType: { type: String, enum: ['Consultation', 'Follow-up', 'Emergency', 'Routine Checkup'], default: 'Consultation' },
+    status: { type: String, enum: ['scheduled', 'completed', 'cancelled', 'pending', 'rescheduled'], default: 'scheduled' },
+    symptoms: { type: String, required: true },
+    diagnosis: { type: String },
+    notes: { type: String },
+    amount: { type: Number, required: true, default: 0 },
+    createdAt: { type: Date, default: Date.now },
+    updatedAt: { type: Date, default: Date.now }
 });
 
-// Prescription Schema
-const prescriptionSchema = new mongoose.Schema({
-    prescriptionId: {
-        type: String,
-        required: true,
-        unique: true
-    },
-    doctor: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Doctor',
-        required: true
-    },
-    patient: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Patient',
-        required: true
-    },
-    appointment: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Appointment',
-        default: null
-    },
-    medications: [{
-        name: {
-            type: String,
-            required: true
-        },
-        dosage: {
-            type: String,
-            required: true
-        },
-        frequency: {
-            type: String,
-            required: true
-        },
-        duration: {
-            type: Number,
-            required: true
-        },
-        quantity: {
-            type: Number,
-            required: true
-        },
-        instructions: String
-    }],
-    diagnosis: {
-        type: String,
-        required: true
-    },
-    additionalNotes: String,
-    issuedDate: {
-        type: Date,
-        default: Date.now
-    },
-    validUntil: {
-        type: Date,
-        required: true
-    },
-    status: {
-        type: String,
-        enum: ['active', 'expired', 'cancelled'],
-        default: 'active'
-    },
-    createdAt: {
-        type: Date,
-        default: Date.now
-    },
-    updatedAt: {
-        type: Date,
-        default: Date.now
-    }
+const departmentSchema = new mongoose.Schema({
+    name: { type: String, required: true, unique: true, trim: true },
+    description: { type: String, required: true },
+    head: { type: mongoose.Schema.Types.ObjectId, ref: 'Doctor' },
+    contactEmail: { type: String, required: true, lowercase: true },
+    contactPhone: { type: String, required: true },
+    location: { type: String, required: true },
+    services: [String],
+    isActive: { type: Boolean, default: true },
+    createdAt: { type: Date, default: Date.now },
+    updatedAt: { type: Date, default: Date.now }
 });
 
-// Medical Record Schema
-const medicalRecordSchema = new mongoose.Schema({
-    recordId: {
-        type: String,
-        required: true,
-        unique: true
-    },
-    patient: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Patient',
-        required: true
-    },
-    doctor: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Doctor',
-        required: true
-    },
-    appointment: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Appointment'
-    },
-    recordType: {
-        type: String,
-        enum: ['Lab Result', 'X-Ray', 'MRI', 'CT Scan', 'Blood Test', 'Prescription', 'Diagnosis', 'Other'],
-        required: true
-    },
-    title: {
-        type: String,
-        required: true
-    },
-    description: String,
-    findings: String,
-    fileUrl: String,
-    fileType: String,
-    uploadedDate: {
-        type: Date,
-        default: Date.now
-    },
-    isConfidential: {
-        type: Boolean,
-        default: false
-    },
-    createdAt: {
-        type: Date,
-        default: Date.now
-    }
-});
-
-// Review Schema
-const reviewSchema = new mongoose.Schema({
-    doctor: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Doctor',
-        required: true
-    },
-    patient: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Patient',
-        required: true
-    },
-    appointment: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Appointment',
-        required: true
-    },
-    rating: {
-        type: Number,
-        required: true,
-        min: 1,
-        max: 5
-    },
-    comment: {
-        type: String,
-        maxlength: 500
-    },
-    createdAt: {
-        type: Date,
-        default: Date.now
-    }
-});
-
-// Notification Schema
-const notificationSchema = new mongoose.Schema({
-    recipient: {
-        type: mongoose.Schema.Types.ObjectId,
-        required: true
-    },
-    recipientType: {
-        type: String,
-        enum: ['Doctor', 'Patient'],
-        required: true
-    },
-    type: {
-        type: String,
-        enum: ['appointment', 'prescription', 'reminder', 'cancellation', 'system'],
-        required: true
-    },
-    title: {
-        type: String,
-        required: true
-    },
-    message: {
-        type: String,
-        required: true
-    },
-    isRead: {
-        type: Boolean,
-        default: false
-    },
-    relatedId: {
-        type: mongoose.Schema.Types.ObjectId,
-        default: null
-    },
-    createdAt: {
-        type: Date,
-        default: Date.now
-    }
-});
-
-// Payment Schema
-const paymentSchema = new mongoose.Schema({
-    paymentId: {
-        type: String,
-        required: true,
-        unique: true
-    },
-    appointment: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Appointment',
-        required: true
-    },
-    patient: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Patient',
-        required: true
-    },
-    doctor: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Doctor',
-        required: true
-    },
-    amount: {
-        type: Number,
-        required: true
-    },
-    paymentMethod: {
-        type: String,
-        enum: ['credit_card', 'debit_card', 'paypal', 'stripe', 'cash'],
-        required: true
-    },
-    status: {
-        type: String,
-        enum: ['pending', 'completed', 'failed', 'refunded'],
-        default: 'pending'
-    },
-    transactionId: String,
-    paymentDate: {
-        type: Date,
-        default: Date.now
-    },
-    createdAt: {
-        type: Date,
-        default: Date.now
-    }
+const staffSchema = new mongoose.Schema({
+    staffId: { type: String, required: true, unique: true },
+    firstName: { type: String, required: true, trim: true },
+    lastName: { type: String, required: true, trim: true },
+    email: { type: String, required: true, unique: true, lowercase: true },
+    password: { type: String, required: true },
+    phone: { type: String, required: true },
+    role: { type: String, required: true, enum: ['receptionist', 'nurse', 'lab_technician', 'pharmacist', 'accountant', 'manager'] },
+    department: { type: String, required: true },
+    qualification: String,
+    experience: { type: Number, default: 0 },
+    salary: { type: Number, required: true },
+    joinDate: { type: Date, default: Date.now },
+    isActive: { type: Boolean, default: true },
+    createdAt: { type: Date, default: Date.now },
+    updatedAt: { type: Date, default: Date.now }
 });
 
 const loginSessionSchema = new mongoose.Schema({
-    userId: { 
-        type: mongoose.Schema.Types.ObjectId, 
-        required: true,
-        refPath: 'userModel'
-    },
-    userModel: {
-        type: String,
-        required: true,
-        enum: ['User', 'Doctor', 'Admin', 'Patient']
-    },
+    userId: { type: mongoose.Schema.Types.ObjectId, required: true },
+    userModel: { type: String, required: true, enum: ['User', 'Doctor', 'Admin', 'Patient', 'Staff'] },
     email: { type: String, required: true },
-    role: { 
-        type: String, 
-        required: true, 
-        enum: ['patient', 'doctor', 'admin'] 
-    },
+    role: { type: String, required: true, enum: ['patient', 'doctor', 'admin', 'staff'] },
     ipAddress: { type: String },
     userAgent: { type: String },
     loginTime: { type: Date, default: Date.now },
     logoutTime: { type: Date },
     isActive: { type: Boolean, default: true },
-    token: { type: String },
     expiresAt: { type: Date }
 });
 
-loginSessionSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
-
-// Indexes for better query performance
-doctorSchema.index({ email: 1, specialization: 1 });
-patientSchema.index({ email: 1, patientId: 1 });
-appointmentSchema.index({ doctor: 1, appointmentDate: 1, status: 1 });
-prescriptionSchema.index({ doctor: 1, patient: 1, issuedDate: -1 });
-medicalRecordSchema.index({ patient: 1, recordType: 1 });
-
-// Pre-save middleware to update timestamps
-const updateTimestamp = function(next) {
-    this.updatedAt = Date.now();
-    next();
-};
-
-const hashPasswordMiddleware = async function(next) {
+// Pre-save middleware for password hashing
+const hashPassword = async function(next) {
     if (!this.isModified('password')) return next();
     try {
         const salt = await bcrypt.genSalt(10);
@@ -651,55 +249,31 @@ const hashPasswordMiddleware = async function(next) {
     }
 };
 
-userSchema.pre('save', hashPasswordMiddleware);
-doctorSchema.pre('save', hashPasswordMiddleware);
-adminSchema.pre('save', hashPasswordMiddleware);
-patientSchema.pre('save', hashPasswordMiddleware);
+userSchema.pre('save', hashPassword);
+doctorSchema.pre('save', hashPassword);
+adminSchema.pre('save', hashPassword);
+patientSchema.pre('save', hashPassword);
+staffSchema.pre('save', hashPassword);
 
-doctorSchema.pre('save', updateTimestamp);
-patientSchema.pre('save', updateTimestamp);
-appointmentSchema.pre('save', updateTimestamp);
-prescriptionSchema.pre('save', updateTimestamp);
-
-// Virtual for full name
-doctorSchema.virtual('fullName').get(function() {
-    return `${this.firstName} ${this.lastName}`;
-});
-
-patientSchema.virtual('fullName').get(function() {
-    return `${this.firstName} ${this.lastName}`;
-});
-
-patientSchema.virtual('age').get(function() {
-    const today = new Date();
-    const birthDate = new Date(this.dateOfBirth);
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-        age--;
-    }
-    return age;
-});
-
-const comparePasswordMethod = async function(candidatePassword) {
+// Password comparison method
+const comparePassword = async function(candidatePassword) {
     return await bcrypt.compare(candidatePassword, this.password);
 };
 
-userSchema.methods.comparePassword = comparePasswordMethod;
-doctorSchema.methods.comparePassword = comparePasswordMethod;
-adminSchema.methods.comparePassword = comparePasswordMethod;
-patientSchema.methods.comparePassword = comparePasswordMethod;
+userSchema.methods.comparePassword = comparePassword;
+doctorSchema.methods.comparePassword = comparePassword;
+adminSchema.methods.comparePassword = comparePassword;
+patientSchema.methods.comparePassword = comparePassword;
+staffSchema.methods.comparePassword = comparePassword;
 
+// Create models
 const User = mongoose.model('User', userSchema);
 const Doctor = mongoose.model('Doctor', doctorSchema);
 const Admin = mongoose.model('Admin', adminSchema);
 const Patient = mongoose.model('Patient', patientSchema);
 const Appointment = mongoose.model('Appointment', appointmentSchema);
-const Prescription = mongoose.model('Prescription', prescriptionSchema);
-const MedicalRecord = mongoose.model('MedicalRecord', medicalRecordSchema);
-const Review = mongoose.model('Review', reviewSchema);
-const Notification = mongoose.model('Notification', notificationSchema);
-const Payment = mongoose.model('Payment', paymentSchema);
+const Department = mongoose.model('Department', departmentSchema);
+const Staff = mongoose.model('Staff', staffSchema);
 const LoginSession = mongoose.model('LoginSession', loginSessionSchema);
 
 // ==================== AUTH MIDDLEWARE ====================
@@ -716,14 +290,40 @@ const authenticateSession = async (req, res, next) => {
             _id: sessionId,
             isActive: true,
             expiresAt: { $gt: new Date() }
-        }).populate('userId');
+        });
 
         if (!session) {
             return res.status(401).json({ error: 'Invalid or expired session' });
         }
 
+        // Get user based on role and model
+        let user;
+        switch(session.userModel) {
+            case 'Doctor':
+                user = await Doctor.findById(session.userId);
+                break;
+            case 'Admin':
+                user = await Admin.findById(session.userId);
+                break;
+            case 'Patient':
+                user = await Patient.findById(session.userId);
+                break;
+            case 'User':
+                user = await User.findById(session.userId);
+                break;
+            case 'Staff':
+                user = await Staff.findById(session.userId);
+                break;
+            default:
+                return res.status(401).json({ error: 'Invalid user type' });
+        }
+
+        if (!user) {
+            return res.status(401).json({ error: 'User not found' });
+        }
+
         req.session = session;
-        req.user = session.userId;
+        req.user = user;
         next();
     } catch (error) {
         console.error('Auth middleware error:', error);
@@ -731,32 +331,22 @@ const authenticateSession = async (req, res, next) => {
     }
 };
 
-// JWT Authentication Middleware
-const authMiddleware = async (req, res, next) => {
-    try {
-        const token = req.header('Authorization')?.replace('Bearer ', '');
-        
-        if (!token) {
-            return res.status(401).json({ error: 'No token provided' });
-        }
-
-        // For now, we'll use session-based auth, but you can integrate JWT later
-        // This is a placeholder for JWT implementation
-        next();
-    } catch (error) {
-        res.status(401).json({ error: 'Please authenticate' });
+const requireAdmin = (req, res, next) => {
+    if (req.session.role !== 'admin') {
+        return res.status(403).json({ error: 'Admin access required' });
     }
+    next();
 };
 
-// ==================== UPDATED HTML PAGE ROUTES ====================
-// Updated to match your folder structure: Public/Dashboard/[dashboard-type]/
+// ==================== ROUTES ====================
 
+// Serve HTML pages
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'Public', 'home', 'index.html'));
 });
 
 app.get('/register', (req, res) => {
-    res.sendFile(path.join(__dirname, 'Public', 'Registration','Registration.html'));
+    res.sendFile(path.join(__dirname, 'Public', 'Registration', 'Registration.html'));
 });
 
 app.get('/register/doctor', (req, res) => {
@@ -775,73 +365,31 @@ app.get('/login', (req, res) => {
     res.sendFile(path.join(__dirname, 'Public', 'login', 'login.html'));
 });
 
-// ==================== UPDATED DASHBOARD ROUTES ====================
-// Updated to match: Public/Dashboard/[dashboard-type]/[dashboard-file].html
-
-// Patient Dashboard
+// Dashboard routes
 app.get('/patient-dashboard', (req, res) => {
     res.sendFile(path.join(__dirname, 'Public', 'Dashboard', 'patient-dashboard', 'patient-dashboard.html'));
 });
 
-// Doctor Dashboard
 app.get('/doctor-dashboard', (req, res) => {
     res.sendFile(path.join(__dirname, 'Public', 'Dashboard', 'doctor-dashboard', 'doctor-dashboard.html'));
 });
 
-// Admin Dashboard
 app.get('/admin-dashboard', (req, res) => {
     res.sendFile(path.join(__dirname, 'Public', 'Dashboard', 'admin-dashboard', 'admin-dashboard.html'));
 });
 
-// ==================== STATIC FILE SERVING ====================
+// ==================== API ROUTES ====================
 
-// Serve dashboard static files (CSS, JS, images) from the Dashboard folder
-app.use('/Dashboard', express.static(path.join(__dirname, 'Public', 'Dashboard')));
-
-// Serve registration static files
-app.use('/Registration', express.static(path.join(__dirname, 'Public', 'Registration')));
-
-// Serve login static files
-app.use('/login', express.static(path.join(__dirname, 'Public', 'login')));
-
-// Serve home static files
-app.use('/', express.static(path.join(__dirname, 'Public', 'home')));
-
-// ==================== REDIRECT ROUTES FOR OLD URLS ====================
-
-// Redirect old .html URLs to new clean URLs
-app.get('/patient-dashboard.html', (req, res) => {
-    res.redirect('/patient-dashboard');
-});
-
-app.get('/doctor-dashboard.html', (req, res) => {
-    res.redirect('/doctor-dashboard');
-});
-
-app.get('/admin-dashboard.html', (req, res) => {
-    res.redirect('/admin-dashboard');
-});
-
-app.get('/home.html', (req, res) => {
-    res.redirect('/');
-});
-
-app.get('/login.html', (req, res) => {
-    res.redirect('/login');
-});
-
-// ==================== ENHANCED API ROUTES ====================
-// (All your existing API routes remain exactly the same)
-
+// Health check
 app.get('/api/health', (req, res) => {
     res.json({ 
         status: 'ok', 
         message: 'Server is running',
-        mongodb: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
+        timestamp: new Date().toISOString()
     });
 });
 
-// Existing registration routes (keep as is)
+// Registration routes
 app.post('/api/register', async (req, res) => {
     try {
         const { username, email, password, firstName, lastName, phone, dateOfBirth, gender, address } = req.body;
@@ -867,8 +415,14 @@ app.post('/api/register', async (req, res) => {
 
         res.status(201).json({
             message: 'User registered successfully',
-            user: { id: user._id, username: user.username, email: user.email, 
-                   firstName: user.firstName, lastName: user.lastName, role: user.role }
+            user: { 
+                id: user._id, 
+                username: user.username, 
+                email: user.email, 
+                firstName: user.firstName, 
+                lastName: user.lastName, 
+                role: user.role 
+            }
         });
     } catch (error) {
         console.error('Registration error:', error);
@@ -879,9 +433,9 @@ app.post('/api/register', async (req, res) => {
 app.post('/api/register/doctor', async (req, res) => {
     try {
         const {
-            username, email, password, firstName, lastName, phone, dateOfBirth, gender,
+            username, email, password, firstName, lastName, phone,
             specialization, licenseNumber, qualification, experience, department,
-            biography, consultationFee, availableDays, availableTimeSlots
+            biography, consultationFee
         } = req.body;
 
         if (!username || !email || !password || !firstName || !lastName || !phone ||
@@ -907,10 +461,8 @@ app.post('/api/register/doctor', async (req, res) => {
 
         const doctor = new Doctor({
             username, email, password, firstName, lastName, phone,
-            dateOfBirth: dateOfBirth || null, gender: gender || '',
             specialization, licenseNumber, qualification, experience, department,
-            biography: biography || '', consultationFee: consultationFee || 0,
-            availableDays: availableDays || [], availableTimeSlots: availableTimeSlots || ''
+            biography: biography || '', consultationFee: consultationFee || 0
         });
 
         await doctor.save();
@@ -933,7 +485,7 @@ app.post('/api/register/admin', async (req, res) => {
     try {
         const {
             username, email, password, firstName, lastName, phone,
-            employeeId, department, position, accessLevel, permissions
+            employeeId, department, position, accessLevel
         } = req.body;
 
         if (!username || !email || !password || !firstName || !lastName || 
@@ -960,8 +512,7 @@ app.post('/api/register/admin', async (req, res) => {
         const admin = new Admin({
             username, email, password, firstName, lastName, phone,
             employeeId, department, position,
-            accessLevel: accessLevel || 'admin',
-            permissions: permissions || {}
+            accessLevel: accessLevel || 'admin'
         });
 
         await admin.save();
@@ -980,12 +531,14 @@ app.post('/api/register/admin', async (req, res) => {
     }
 });
 
-// Enhanced Patient Registration
 app.post('/api/register/patient', async (req, res) => {
     try {
         const { firstName, lastName, email, password, phone, dateOfBirth, gender, bloodGroup, address } = req.body;
         
-        // Check if patient already exists
+        if (!firstName || !lastName || !email || !password || !phone || !dateOfBirth || !gender) {
+            return res.status(400).json({ error: 'All required fields must be filled' });
+        }
+        
         const existingPatient = await Patient.findOne({ email });
         if (existingPatient) {
             return res.status(400).json({ error: 'Email already registered' });
@@ -995,7 +548,6 @@ app.post('/api/register/patient', async (req, res) => {
         const patientCount = await Patient.countDocuments();
         const patientId = `P${String(patientCount + 1).padStart(4, '0')}`;
         
-        // Create new patient
         const patient = new Patient({
             patientId,
             firstName,
@@ -1016,7 +568,8 @@ app.post('/api/register/patient', async (req, res) => {
             patient: {
                 id: patient._id,
                 patientId: patient.patientId,
-                fullName: patient.fullName,
+                firstName: patient.firstName,
+                lastName: patient.lastName,
                 email: patient.email
             }
         });
@@ -1026,7 +579,7 @@ app.post('/api/register/patient', async (req, res) => {
     }
 });
 
-// Enhanced Login with Patient Support
+// Login route
 app.post('/api/login', async (req, res) => {
     try {
         const { email, password, userType } = req.body;
@@ -1039,6 +592,7 @@ app.post('/api/login', async (req, res) => {
         let userModel;
         const emailLower = email.toLowerCase();
 
+        // Find user based on type
         if (userType === 'doctor') {
             user = await Doctor.findOne({ email: emailLower });
             userModel = 'Doctor';
@@ -1062,15 +616,16 @@ app.post('/api/login', async (req, res) => {
             return res.status(401).json({ error: 'Invalid email or password' });
         }
 
+        // Create login session
         const session = new LoginSession({
             userId: user._id,
             userModel: userModel,
             email: user.email,
             role: user.role || userType,
-            ipAddress: req.ip || req.connection.remoteAddress,
+            ipAddress: req.ip,
             userAgent: req.get('User-Agent'),
             loginTime: new Date(),
-            expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000)
+            expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours
         });
 
         await session.save();
@@ -1093,6 +648,7 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
+// Logout route
 app.post('/api/logout', async (req, res) => {
     try {
         const { sessionId } = req.body;
@@ -1111,11 +667,12 @@ app.post('/api/logout', async (req, res) => {
     }
 });
 
+// Profile route
 app.get('/api/profile', authenticateSession, async (req, res) => {
     res.json({
         user: {
             id: req.user._id,
-            username: req.user.username,
+            username: req.user.username || req.user.email,
             email: req.user.email,
             firstName: req.user.firstName,
             lastName: req.user.lastName,
@@ -1124,9 +681,239 @@ app.get('/api/profile', authenticateSession, async (req, res) => {
     });
 });
 
-// ==================== DOCTOR DASHBOARD ROUTES ====================
+// ==================== ADMIN API ROUTES ====================
 
-// Get Doctor Profile
+// Admin dashboard stats
+app.get('/api/admin/dashboard/stats', authenticateSession, requireAdmin, async (req, res) => {
+    try {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        const [
+            totalDoctors,
+            totalPatients,
+            todayAppointments,
+            totalAppointments
+        ] = await Promise.all([
+            Doctor.countDocuments({ isActive: true }),
+            Patient.countDocuments({ isActive: true }),
+            Appointment.countDocuments({
+                appointmentDate: { $gte: today }
+            }),
+            Appointment.countDocuments()
+        ]);
+        
+        res.json({
+            totalDoctors,
+            totalPatients,
+            todayAppointments,
+            totalAppointments,
+            todayRevenue: 0 // Simplified for now
+        });
+    } catch (error) {
+        console.error('Admin stats error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Get all doctors for admin
+app.get('/api/admin/doctors', authenticateSession, requireAdmin, async (req, res) => {
+    try {
+        const doctors = await Doctor.find().select('-password').sort({ createdAt: -1 });
+        
+        res.json({
+            doctors,
+            total: doctors.length
+        });
+    } catch (error) {
+        console.error('Get doctors error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Get all patients for admin
+app.get('/api/admin/patients', authenticateSession, requireAdmin, async (req, res) => {
+    try {
+        const patients = await Patient.find().select('-password').sort({ registeredDate: -1 });
+        
+        res.json({
+            patients,
+            total: patients.length
+        });
+    } catch (error) {
+        console.error('Get patients error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Get all appointments for admin
+app.get('/api/admin/appointments', authenticateSession, requireAdmin, async (req, res) => {
+    try {
+        const appointments = await Appointment.find()
+            .populate('doctor', 'firstName lastName specialization')
+            .populate('patient', 'firstName lastName patientId')
+            .sort({ appointmentDate: -1 });
+        
+        res.json({
+            appointments,
+            total: appointments.length
+        });
+    } catch (error) {
+        console.error('Get appointments error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Get all departments
+app.get('/api/admin/departments', authenticateSession, requireAdmin, async (req, res) => {
+    try {
+        const departments = await Department.find()
+            .populate('head', 'firstName lastName specialization')
+            .sort({ name: 1 });
+        
+        res.json({
+            departments,
+            total: departments.length
+        });
+    } catch (error) {
+        console.error('Get departments error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Create department
+app.post('/api/admin/departments', authenticateSession, requireAdmin, async (req, res) => {
+    try {
+        const { name, description, head, contactEmail, contactPhone, location, services } = req.body;
+        
+        const existingDepartment = await Department.findOne({ name });
+        if (existingDepartment) {
+            return res.status(400).json({ error: 'Department already exists' });
+        }
+        
+        const department = new Department({
+            name,
+            description,
+            head,
+            contactEmail,
+            contactPhone,
+            location,
+            services: services || []
+        });
+        
+        await department.save();
+        
+        res.status(201).json({
+            message: 'Department created successfully',
+            department
+        });
+    } catch (error) {
+        console.error('Create department error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Get all staff
+app.get('/api/admin/staff', authenticateSession, requireAdmin, async (req, res) => {
+    try {
+        const staff = await Staff.find().select('-password').sort({ joinDate: -1 });
+        
+        res.json({
+            staff,
+            total: staff.length
+        });
+    } catch (error) {
+        console.error('Get staff error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Create staff
+app.post('/api/admin/staff', authenticateSession, requireAdmin, async (req, res) => {
+    try {
+        const { firstName, lastName, email, password, phone, role, department, qualification, experience, salary } = req.body;
+        
+        const existingStaff = await Staff.findOne({ email });
+        if (existingStaff) {
+            return res.status(400).json({ error: 'Email already registered' });
+        }
+        
+        const staffCount = await Staff.countDocuments();
+        const staffId = `ST${String(staffCount + 1).padStart(4, '0')}`;
+        
+        const staff = new Staff({
+            staffId,
+            firstName,
+            lastName,
+            email,
+            password,
+            phone,
+            role,
+            department,
+            qualification,
+            experience: experience || 0,
+            salary
+        });
+        
+        await staff.save();
+        
+        res.status(201).json({
+            message: 'Staff created successfully',
+            staff: {
+                id: staff._id,
+                staffId: staff.staffId,
+                firstName: staff.firstName,
+                lastName: staff.lastName,
+                email: staff.email,
+                role: staff.role
+            }
+        });
+    } catch (error) {
+        console.error('Create staff error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Recent activity
+app.get('/api/admin/recent-activity', authenticateSession, requireAdmin, async (req, res) => {
+    try {
+        // Simplified recent activity
+        const activities = [
+            {
+                type: 'system',
+                description: 'System started successfully',
+                timestamp: new Date()
+            }
+        ];
+        
+        res.json({ activities });
+    } catch (error) {
+        console.error('Recent activity error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// System alerts
+app.get('/api/admin/system-alerts', authenticateSession, requireAdmin, async (req, res) => {
+    try {
+        const alerts = [
+            {
+                title: 'System Status',
+                message: 'All systems operational',
+                severity: 'info',
+                timestamp: new Date()
+            }
+        ];
+        
+        res.json({ alerts });
+    } catch (error) {
+        console.error('System alerts error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// ==================== DOCTOR API ROUTES ====================
+
 app.get('/api/doctor/profile', authenticateSession, async (req, res) => {
     try {
         if (req.session.role !== 'doctor') {
@@ -1134,42 +921,13 @@ app.get('/api/doctor/profile', authenticateSession, async (req, res) => {
         }
 
         const doctor = await Doctor.findById(req.user._id).select('-password');
-        if (!doctor) {
-            return res.status(404).json({ error: 'Doctor not found' });
-        }
         res.json(doctor);
     } catch (error) {
+        console.error('Doctor profile error:', error);
         res.status(500).json({ error: error.message });
     }
 });
 
-// Update Doctor Profile
-app.put('/api/doctor/profile', authenticateSession, async (req, res) => {
-    try {
-        if (req.session.role !== 'doctor') {
-            return res.status(403).json({ error: 'Access denied' });
-        }
-
-        const updates = req.body;
-        delete updates.password;
-        delete updates.email;
-        
-        const doctor = await Doctor.findByIdAndUpdate(
-            req.user._id,
-            updates,
-            { new: true, runValidators: true }
-        ).select('-password');
-        
-        res.json({
-            message: 'Profile updated successfully',
-            doctor
-        });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
-// Get Doctor Dashboard Stats
 app.get('/api/doctor/dashboard/stats', authenticateSession, async (req, res) => {
     try {
         if (req.session.role !== 'doctor') {
@@ -1178,24 +936,17 @@ app.get('/api/doctor/dashboard/stats', authenticateSession, async (req, res) => 
 
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        const tomorrow = new Date(today);
-        tomorrow.setDate(tomorrow.getDate() + 1);
         
         const [
             todayAppointments,
             totalPatients,
-            todayPrescriptions,
             pendingAppointments
         ] = await Promise.all([
             Appointment.countDocuments({
                 doctor: req.user._id,
-                appointmentDate: { $gte: today, $lt: tomorrow }
+                appointmentDate: { $gte: today }
             }),
             Appointment.distinct('patient', { doctor: req.user._id }).then(ids => ids.length),
-            Prescription.countDocuments({
-                doctor: req.user._id,
-                issuedDate: { $gte: today, $lt: tomorrow }
-            }),
             Appointment.countDocuments({
                 doctor: req.user._id,
                 status: 'pending'
@@ -1205,292 +956,17 @@ app.get('/api/doctor/dashboard/stats', authenticateSession, async (req, res) => 
         res.json({
             todayAppointments,
             totalPatients,
-            todayPrescriptions,
-            pendingAppointments
+            pendingAppointments,
+            todayPrescriptions: 0
         });
     } catch (error) {
+        console.error('Doctor stats error:', error);
         res.status(500).json({ error: error.message });
     }
 });
 
-// ==================== APPOINTMENT ROUTES ====================
+// ==================== PATIENT API ROUTES ====================
 
-// Get All Appointments for Doctor
-app.get('/api/doctor/appointments', authenticateSession, async (req, res) => {
-    try {
-        if (req.session.role !== 'doctor') {
-            return res.status(403).json({ error: 'Access denied' });
-        }
-
-        const { status, date, page = 1, limit = 10 } = req.query;
-        
-        const query = { doctor: req.user._id };
-        
-        if (status) {
-            query.status = status;
-        }
-        
-        if (date) {
-            const startDate = new Date(date);
-            startDate.setHours(0, 0, 0, 0);
-            const endDate = new Date(date);
-            endDate.setHours(23, 59, 59, 999);
-            query.appointmentDate = { $gte: startDate, $lte: endDate };
-        }
-        
-        const appointments = await Appointment.find(query)
-            .populate('patient', 'firstName lastName email phone patientId')
-            .sort({ appointmentDate: -1 })
-            .limit(limit * 1)
-            .skip((page - 1) * limit);
-        
-        const count = await Appointment.countDocuments(query);
-        
-        res.json({
-            appointments,
-            totalPages: Math.ceil(count / limit),
-            currentPage: page,
-            total: count
-        });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
-// Update Appointment Status
-app.patch('/api/doctor/appointments/:appointmentId/status', authenticateSession, async (req, res) => {
-    try {
-        if (req.session.role !== 'doctor') {
-            return res.status(403).json({ error: 'Access denied' });
-        }
-
-        const { status, diagnosis, notes } = req.body;
-        
-        const appointment = await Appointment.findOneAndUpdate(
-            { _id: req.params.appointmentId, doctor: req.user._id },
-            { status, diagnosis, notes },
-            { new: true }
-        ).populate('patient', 'firstName lastName email');
-        
-        if (!appointment) {
-            return res.status(404).json({ error: 'Appointment not found' });
-        }
-        
-        // Create notification for patient
-        await Notification.create({
-            recipient: appointment.patient._id,
-            recipientType: 'Patient',
-            type: 'appointment',
-            title: 'Appointment Status Updated',
-            message: `Your appointment status has been updated to ${status}`,
-            relatedId: appointment._id
-        });
-        
-        res.json({
-            message: 'Appointment updated successfully',
-            appointment
-        });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
-// ==================== PATIENT ROUTES ====================
-
-// Get All Patients for Doctor
-app.get('/api/doctor/patients', authenticateSession, async (req, res) => {
-    try {
-        if (req.session.role !== 'doctor') {
-            return res.status(403).json({ error: 'Access denied' });
-        }
-
-        const { search, page = 1, limit = 10 } = req.query;
-        
-        // Get unique patient IDs from appointments
-        const appointmentPatients = await Appointment.distinct('patient', { doctor: req.user._id });
-        
-        const query = { _id: { $in: appointmentPatients } };
-        
-        if (search) {
-            query.$or = [
-                { firstName: { $regex: search, $options: 'i' } },
-                { lastName: { $regex: search, $options: 'i' } },
-                { patientId: { $regex: search, $options: 'i' } },
-                { email: { $regex: search, $options: 'i' } }
-            ];
-        }
-        
-        const patients = await Patient.find(query)
-            .select('-password')
-            .sort({ lastVisit: -1 })
-            .limit(limit * 1)
-            .skip((page - 1) * limit);
-        
-        const count = await Patient.countDocuments(query);
-        
-        res.json({
-            patients,
-            totalPages: Math.ceil(count / limit),
-            currentPage: page,
-            total: count
-        });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
-// ==================== PRESCRIPTION ROUTES ====================
-
-// Create Prescription
-app.post('/api/doctor/prescriptions', authenticateSession, async (req, res) => {
-    try {
-        if (req.session.role !== 'doctor') {
-            return res.status(403).json({ error: 'Access denied' });
-        }
-
-        const { patientId, appointmentId, medications, diagnosis, additionalNotes, validDays = 30 } = req.body;
-        
-        // Generate unique prescription ID
-        const prescriptionCount = await Prescription.countDocuments();
-        const prescriptionId = `RX${String(prescriptionCount + 1).padStart(6, '0')}`;
-        
-        const validUntil = new Date();
-        validUntil.setDate(validUntil.getDate() + validDays);
-        
-        const prescription = new Prescription({
-            prescriptionId,
-            doctor: req.user._id,
-            patient: patientId,
-            appointment: appointmentId || null,
-            medications,
-            diagnosis,
-            additionalNotes,
-            validUntil
-        });
-        
-        await prescription.save();
-        await prescription.populate('patient', 'firstName lastName patientId');
-        
-        // Create notification for patient
-        await Notification.create({
-            recipient: patientId,
-            recipientType: 'Patient',
-            type: 'prescription',
-            title: 'New Prescription Issued',
-            message: 'A new prescription has been issued for you',
-            relatedId: prescription._id
-        });
-        
-        res.status(201).json({
-            message: 'Prescription created successfully',
-            prescription
-        });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
-// ==================== PATIENT DASHBOARD ROUTES ====================
-
-// Book Appointment (Patient)
-app.post('/api/patient/appointments', authenticateSession, async (req, res) => {
-    try {
-        if (req.session.role !== 'patient') {
-            return res.status(403).json({ error: 'Access denied' });
-        }
-
-        const { doctorId, appointmentDate, timeSlot, appointmentType, symptoms } = req.body;
-        
-        // Check if time slot is available
-        const existingAppointment = await Appointment.findOne({
-            doctor: doctorId,
-            appointmentDate,
-            'timeSlot.startTime': timeSlot.startTime,
-            status: { $ne: 'cancelled' }
-        });
-        
-        if (existingAppointment) {
-            return res.status(400).json({ error: 'Time slot not available' });
-        }
-        
-        // Get doctor consultation fee
-        const doctor = await Doctor.findById(doctorId);
-        if (!doctor) {
-            return res.status(404).json({ error: 'Doctor not found' });
-        }
-        
-        // Generate unique appointment ID
-        const appointmentCount = await Appointment.countDocuments();
-        const appointmentId = `APT${String(appointmentCount + 1).padStart(6, '0')}`;
-        
-        const appointment = new Appointment({
-            appointmentId,
-            doctor: doctorId,
-            patient: req.user._id,
-            appointmentDate,
-            timeSlot,
-            appointmentType,
-            symptoms,
-            amount: doctor.consultationFee
-        });
-        
-        await appointment.save();
-        await appointment.populate('doctor', 'firstName lastName specialization');
-        
-        // Create notification for doctor
-        await Notification.create({
-            recipient: doctorId,
-            recipientType: 'Doctor',
-            type: 'appointment',
-            title: 'New Appointment Request',
-            message: `New appointment request from patient`,
-            relatedId: appointment._id
-        });
-        
-        res.status(201).json({
-            message: 'Appointment booked successfully',
-            appointment
-        });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
-// Get Patient Appointments
-app.get('/api/patient/appointments', authenticateSession, async (req, res) => {
-    try {
-        if (req.session.role !== 'patient') {
-            return res.status(403).json({ error: 'Access denied' });
-        }
-
-        const { status, page = 1, limit = 10 } = req.query;
-        
-        const query = { patient: req.user._id };
-        
-        if (status) {
-            query.status = status;
-        }
-        
-        const appointments = await Appointment.find(query)
-            .populate('doctor', 'firstName lastName specialization consultationFee')
-            .sort({ appointmentDate: -1 })
-            .limit(limit * 1)
-            .skip((page - 1) * limit);
-        
-        const count = await Appointment.countDocuments(query);
-        
-        res.json({
-            appointments,
-            totalPages: Math.ceil(count / limit),
-            currentPage: page,
-            total: count
-        });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
-// Get Patient Profile
 app.get('/api/patient/profile', authenticateSession, async (req, res) => {
     try {
         if (req.session.role !== 'patient') {
@@ -1498,53 +974,14 @@ app.get('/api/patient/profile', authenticateSession, async (req, res) => {
         }
 
         const patient = await Patient.findById(req.user._id).select('-password');
-        if (!patient) {
-            return res.status(404).json({ error: 'Patient not found' });
-        }
         res.json(patient);
     } catch (error) {
+        console.error('Patient profile error:', error);
         res.status(500).json({ error: error.message });
     }
 });
 
-// ==================== SEARCH ROUTES ====================
-
-// Search Doctors
-app.get('/api/search/doctors', async (req, res) => {
-    try {
-        const { specialization, name, page = 1, limit = 10 } = req.query;
-        
-        const query = { isActive: true };
-        
-        if (specialization) {
-            query.specialization = specialization;
-        }
-        
-        if (name) {
-            query.$or = [
-                { firstName: { $regex: name, $options: 'i' } },
-                { lastName: { $regex: name, $options: 'i' } }
-            ];
-        }
-        
-        const doctors = await Doctor.find(query)
-            .select('-password')
-            .sort({ experience: -1 })
-            .limit(limit * 1)
-            .skip((page - 1) * limit);
-        
-        const count = await Doctor.countDocuments(query);
-        
-        res.json({
-            doctors,
-            totalPages: Math.ceil(count / limit),
-            currentPage: page,
-            total: count
-        });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
+// ==================== UTILITY ROUTES ====================
 
 // Get available doctors
 app.get('/api/doctors', async (req, res) => {
@@ -1552,21 +989,44 @@ app.get('/api/doctors', async (req, res) => {
         const doctors = await Doctor.find({ isActive: true }).select('-password');
         res.json({ doctors });
     } catch (error) {
+        console.error('Get doctors error:', error);
         res.status(500).json({ error: 'Failed to fetch doctors' });
     }
 });
 
-app.get('/api/admins', async (req, res) => {
+// Search doctors
+app.get('/api/search/doctors', async (req, res) => {
     try {
-        const admins = await Admin.find({ isActive: true }).select('-password');
-        res.json({ admins });
+        const { specialization, name } = req.query;
+        
+        const query = { isActive: true };
+        
+        if (specialization) {
+            query.specialization = new RegExp(specialization, 'i');
+        }
+        
+        if (name) {
+            query.$or = [
+                { firstName: new RegExp(name, 'i') },
+                { lastName: new RegExp(name, 'i') }
+            ];
+        }
+        
+        const doctors = await Doctor.find(query).select('-password');
+        
+        res.json({
+            doctors,
+            total: doctors.length
+        });
     } catch (error) {
-        res.status(500).json({ error: 'Failed to fetch admins' });
+        console.error('Search doctors error:', error);
+        res.status(500).json({ error: error.message });
     }
 });
 
-// ==================== ERROR HANDLING (MUST BE LAST) ====================
+// ==================== ERROR HANDLING ====================
 
+// 404 handler
 app.use((req, res) => {
     res.status(404).json({ 
         error: 'Route not found',
@@ -1575,6 +1035,7 @@ app.use((req, res) => {
     });
 });
 
+// Global error handler
 app.use((err, req, res, next) => {
     console.error('Error Stack:', err.stack);
     
@@ -1592,21 +1053,14 @@ app.use((err, req, res, next) => {
         });
     }
     
-    if (err.name === 'JsonWebTokenError') {
-        return res.status(401).json({
-            error: 'Invalid token'
-        });
-    }
-    
-    res.status(err.status || 500).json({
-        error: process.env.NODE_ENV === 'production' ? 'Internal server error' : err.message,
-        ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
+    res.status(500).json({
+        error: 'Internal server error',
+        ...(process.env.NODE_ENV === 'development' && { details: err.message })
     });
 });
 
+// Start server
 app.listen(PORT, () => {
     console.log(`🚀 Server is running on http://localhost:${PORT}`);
-    console.log(`📊 Mongo URI: ${MONGO_URI}`);
     console.log(`📁 Serving static files from: ${path.join(__dirname, 'Public')}`);
-    console.log(`📊 Dashboard routes configured for: Public/Dashboard/`);
 });
